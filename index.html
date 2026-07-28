@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张恒瑀 · 设计作品集</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #08080f;
+            --surface: #111118;
+            --text: #eeeef5;
+            --text-dim: #7878a0;
+            --accent: #8888ff;
+            --accent-dim: rgba(136,136,255,0.15);
+            --gradient: linear-gradient(135deg, #6666ff, #8888ff, #aaaaff);
+            --glow: rgba(136,136,255,0.08);
+            --font-sans: 'Noto Sans SC', -apple-system, sans-serif;
+            --font-serif: 'Noto Serif SC', Georgia, serif;
+        }
+
+        html { scroll-behavior: smooth; height: 100%; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            overflow-x: hidden;
+            min-height: 100%;
+        }
+
+        /* ---- Cursor ---- */
+        .cursor-dot {
+            position: fixed; width: 8px; height: 8px;
+            background: var(--accent); border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transition: transform 0.1s, background 0.3s;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            position: fixed; width: 40px; height: 40px;
+            border: 1.5px solid rgba(136,136,255,0.3)
+            border-radius: 50%; pointer-events: none;
+            z-index: 9998; transition: width 0.3s, height 0.3s, border-color 0.3s;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ---- Nav ---- */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100; padding: 20px 48px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.4s, backdrop-filter 0.4s;
+        }
+        nav.scrolled {
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .logo {
+            font-size: 14px; font-weight: 500;
+            letter-spacing: 3px; color: var(--text);
+        }
+        .logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 32px; list-style: none; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-dim);
+            font-size: 13px; letter-spacing: 2px; font-weight: 300;
+            transition: color 0.3s; position: relative;
+        }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0;
+            width: 0; height: 1px; background: var(--accent);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover { color: var(--text); }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* ---- Hero ---- */
+        .hero {
+            min-height: 100vh; width: 100%; max-width: none;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center;
+            padding: 0 24px; position: relative;
+            background: var(--bg);
+        }
+        .hero-bg-shapes {
+            position: absolute; inset: 0; overflow: hidden; z-index: 0;
+        }
+        .hero-bg-shapes .shape {
+            position: absolute; border-radius: 50%;
+            filter: blur(120px); opacity: 0.12;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+        .shape-1 { width: 600px; height: 600px; background: var(--accent); top: -15%; left: -10%; }
+        .shape-2 { width: 500px; height: 500px; background: var(--accent); bottom: -15%; right: -10%; animation-delay: -7s; opacity: 0.08; }
+        .shape-3 { width: 350px; height: 350px; background: var(--accent); top: 40%; left: 55%; animation-delay: -14s; opacity: 0.06; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -30px) scale(1.1); }
+        }
+
+        .hero-content { position: relative; z-index: 1; text-align: center; max-width: 720px; }
+        .hero-tag {
+            font-size: 12px; letter-spacing: 4px; color: var(--accent);
+            margin-bottom: 32px; font-weight: 300; display: inline-block;
+            padding: 8px 24px; border: 1px solid var(--accent-dim);
+            border-radius: 20px; backdrop-filter: blur(10px);
+        }
+        .hero h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(40px, 7vw, 96px);
+            font-weight: 400; line-height: 1.1;
+            margin-bottom: 20px;
+        }
+        .hero h1 .hi { font-size: clamp(20px, 3vw, 48px); display: block; margin-bottom: 12px; font-weight: 300; letter-spacing: 2px; }
+        .hero h1 .gradient-text {
+            background: var(--gradient);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: clamp(15px, 1.4vw, 18px); color: var(--text-dim);
+            max-width: 520px; line-height: 2; font-weight: 300;
+            margin: 0 auto;
+        }
+        .hero-cta {
+            margin-top: 48px; display: flex; gap: 20px; align-items: center;
+            justify-content: center;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 36px; border: none; border-radius: 30px;
+            font-size: 13px; font-weight: 500; letter-spacing: 1px;
+            cursor: pointer; text-decoration: none; transition: all 0.4s;
+        }
+        .btn-primary {
+            background: var(--gradient); color: #fff;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(136,136,255,0.25); }
+        .btn-outline {
+            border: 1px solid rgba(255,255,255,0.08); color: var(--text); background: transparent;
+        }
+        .btn-outline:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+        .hero-scroll {
+            position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: var(--text-dim); font-size: 11px; letter-spacing: 2px;
+        }
+        .scroll-line {
+            width: 1px; height: 60px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            animation: scrollPulse 2s infinite;
+        }
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* ---- Section Common ---- */
+        section { padding: 120px 48px; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            font-size: 12px; letter-spacing: 3px; color: var(--accent);
+            font-weight: 300; margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: clamp(32px, 4vw, 56px);
+            font-weight: 400; margin-bottom: 16px;
+        }
+        .section-title span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section-desc { color: var(--text-dim); font-weight: 300; max-width: 500px; margin-bottom: 64px; }
+
+        /* ---- Category Tabs ---- */
+        .filter-bar {
+            display: flex; gap: 12px; margin-bottom: 48px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 20px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent; color: var(--text-dim);
+            font-size: 12px; letter-spacing: 1px;
+            cursor: pointer; transition: all 0.3s;
+            font-family: var(--font-sans);
+        }
+        .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+        .filter-btn.active {
+            background: var(--gradient); color: #fff; border-color: transparent;
+        }
+
+        /* ---- Works Grid ---- */
+        .works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+        .work-card {
+            position: relative; border-radius: 16px; overflow: hidden;
+            aspect-ratio: 16/9; cursor: pointer;
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.5s;
+            display: none;
+        }
+        .work-card.show { display: block; }
+        .work-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-dim);
+            box-shadow: 0 20px 60px var(--glow);
+        }
+        .work-card img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s;
+        }
+        .work-card:hover img { transform: scale(1.05); }
+        .work-card .overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent 50%);
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 28px; opacity: 0; transition: opacity 0.4s;
+        }
+        .work-card:hover .overlay { opacity: 1; }
+        .work-card .overlay .tag {
+            display: inline-block; font-size: 10px; letter-spacing: 2px;
+            color: var(--accent); margin-bottom: 6px;
+        }
+        .work-card .overlay h3 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+        .work-card .overlay p { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
+
+        /* ---- Filter ---- */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 80px;
+            align-items: start;
+        }
+        .about-avatar-wrap {
+            position: relative;
+        }
+        .about-avatar {
+            width: 100%; aspect-ratio: 1;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(192,132,252,0.15), rgba(244,114,182,0.15));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 100px; position: relative; overflow: hidden;
+        }
+        .about-avatar::before {
+            content: ''; position: absolute; inset: -2px;
+            border-radius: 26px; background: var(--gradient);
+            z-index: -1; opacity: 0.3;
+        }
+        .about-text h3 {
+            font-family: var(--font-serif);
+            font-size: 28px; font-weight: 400; margin-bottom: 8px;
+        }
+        .about-text .subtitle {
+            color: var(--accent); font-size: 13px; letter-spacing: 2px;
+            margin-bottom: 24px; display: block;
+        }
+        .about-text p {
+            color: var(--text-dim); margin-bottom: 16px; font-weight: 300;
+            font-size: 15px; line-height: 2;
+        }
+        .about-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-top: 32px;
+        }
+        .info-item {
+            padding: 16px; border-radius: 12px;
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.04);
+        }
+        .info-item .label { font-size: 10px; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px; }
+        .info-item .value { font-size: 14px; color: var(--text); font-weight: 400; }
+        .about-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 24px; margin-top: 40px;
+        }
+        .stat h4 { font-size: 32px; font-weight: 300; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat p { font-size: 11px; letter-spacing: 1px; color: var(--text-dim); }
+
+        /* ---- Skills ---- */
+        .skills-section { padding-top: 60px; }
+        .skills-section .section-label { margin-bottom: 16px; }
+        .skills-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .skill-tag {
+            padding: 10px 18px; border-radius: 10px;
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px; font-weight: 300; text-align: center;
+            transition: all 0.3s;
+        }
+        .skill-tag:hover {
+            border-color: var(--accent-dim);
+            background: var(--accent-dim);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Experience ---- */
+        .timeline { margin-top: 48px; }
+        .timeline-item {
+            display: grid; grid-template-columns: 140px 1fr;
+            gap: 32px; padding: 24px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-date { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; padding-top: 4px; }
+        .timeline-content h4 { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+        .timeline-content .org { font-size: 12px; color: var(--accent); letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .timeline-content p { font-size: 13px; color: var(--text-dim); font-weight: 300; line-height: 1.8; }
+
+        /* ---- Contact ---- */
+        .contact-section { text-align: center; padding-bottom: 80px; }
+        .contact-section .section-title { margin-bottom: 24px; }
+        .contact-section p { color: var(--text-dim); max-width: 500px; margin: 0 auto 48px; font-weight: 300; }
+        .contact-links { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .contact-links a {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 30px; text-decoration: none; color: var(--text);
+            font-size: 13px; transition: all 0.3s;
+        }
+        .contact-links a:hover { border-color: var(--accent); background: var(--accent-dim); transform: translateY(-2px); }
+
+        /* ---- Footer ---- */
+        footer {
+            text-align: center; padding: 40px 48px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px; color: var(--text-dim);
+        }
+
+        /* ---- Animations ---- */
+        .fade-in {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* ---- Lightbox ---- */
+        .lightbox {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(8,8,15,0.95);
+            display: none; align-items: center; justify-content: center;
+            padding: 40px; cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        .lightbox.open { display: flex; }
+        .lightbox img {
+            max-width: 95vw; max-height: 90vh;
+            border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        .lightbox .close {
+            position: absolute; top: 24px; right: 32px;
+            color: #fff; font-size: 28px; cursor: pointer;
+            opacity: 0.5; transition: opacity 0.3s;
+        }
+        .lightbox .close:hover { opacity: 1; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            nav { padding: 16px 20px; }
+            .nav-links { gap: 16px; }
+            .nav-links a { font-size: 11px; letter-spacing: 1px; }
+            .hero { padding: 0 20px; }
+            .hero h1 { font-size: 40px; }
+            section { padding: 80px 20px; }
+            .works-grid { grid-template-columns: 1fr; }
+            .about-grid { grid-template-columns: 1fr; gap: 40px; }
+            .about-info-grid { grid-template-columns: 1fr; }
+            .about-stats { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .timeline-item { grid-template-columns: 1fr; gap: 8px; }
+            .cursor-dot, .cursor-ring { display: none; }
+            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+        <span class="close">&times;</span>
+        <img id="lightboxImg" src="" alt="">
+    </div>
+
+    <!-- Nav -->
+    <nav id="nav">
+        <div class="logo">恒瑀<span>.</span></div>
+        <ul class="nav-links">
+            <li><a href="#works">作品</a></li>
+            <li><a href="#about">关于</a></li>
+            <li><a href="#contact">联系</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <div class="hero-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-tag">✦ 视觉传达设计师</div>
+            <h1>
+                <span class="hi">你好，我是</span>
+                <span class="gradient-text">张恒瑀</span>
+            </h1>
+            <p>用视觉语言讲述品牌故事，在像素与情感之间寻找平衡。<br>专注于平面设计、3D建模与动态视觉创作。</p>
+            <div class="hero-cta">
+                <a href="#works" class="btn btn-primary">查看作品 →</a>
+                <a href="#contact" class="btn btn-outline">联系我</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span>SCROLL</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- Works -->
+    <section id="works">
+        <div class="fade-in">
+            <div class="section-label">SELECTED WORKS</div>
+            <h2 class="section-title">精选 <span>作品</span></h2>
+            <p class="section-desc">涵盖平面设计、3D建模、动态视觉与AIGC创作，每一件作品都是对视觉语言的探索。</p>
+        </div>
+
+        <div class="filter-bar fade-in">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="graphic">平面设计</button>
+            <button class="filter-btn" data-filter="modeling">3D建模</button>
+            <button class="filter-btn" data-filter="motion">动态/AIGC</button>
+        </div>
+
+        <div class="works-grid">
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_04.png')">
+                <img src="images/page_04.png" alt="花西子男士系列海报" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>花西子男士系列海报</h3>
+                    <p>Photoshop · Seedream2.0</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_05.png')">
+                <img src="images/page_05.png" alt="轻生活主题海报" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>"轻生活" 主题海报</h3>
+                    <p>Photoshop · Seedream2.0</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_06.png')">
+                <img src="images/page_06.png" alt="东方雅韵传统图形" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>"东方雅韵" 传统图形</h3>
+                    <p>Photoshop · Seedream2.0</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_07.png')">
+                <img src="images/page_07.png" alt="城市地标视觉设计" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>城市地标视觉设计</h3>
+                    <p>Photoshop · Illustrator · Seedream2.0</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_08.png')">
+                <img src="images/page_08.png" alt="香牌香方可视化设计" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>香牌香方可视化设计</h3>
+                    <p>Photoshop · Illustrator · Seedream2.0</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="graphic" onclick="openLightbox('images/page_09.png')">
+                <img src="images/page_09.png" alt="纳爱斯牙膏IP形象" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">GRAPHIC DESIGN</span>
+                    <h3>纳爱斯牙膏IP形象设计</h3>
+                    <p>IP形象与周边视觉设计 · Illustrator</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="modeling" onclick="openLightbox('images/page_10.png')">
+                <img src="images/page_10.png" alt="C4D建模作品集" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">3D MODELING</span>
+                    <h3>C4D建模作品 · 概览</h3>
+                    <p>Cinema 4D</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="modeling" onclick="openLightbox('images/page_11.png')">
+                <img src="images/page_11.png" alt="C4D包装设计" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">3D MODELING</span>
+                    <h3>C4D包装设计</h3>
+                    <p>Cinema 4D · 产品建模与渲染</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="modeling" onclick="openLightbox('images/page_12.png')">
+                <img src="images/page_12.png" alt="C4D建模设计" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">3D MODELING</span>
+                    <h3>C4D建模设计</h3>
+                    <p>Cinema 4D · 创意建模</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="motion" onclick="openLightbox('images/page_13.png')">
+                <img src="images/page_13.png" alt="AE动效剪辑" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">MOTION</span>
+                    <h3>AE动效与视频剪辑</h3>
+                    <p>After Effects · 剪映</p>
+                </div>
+            </div>
+
+            <div class="work-card show" data-category="motion" onclick="openLightbox('images/page_14.png')">
+                <img src="images/page_14.png" alt="AIGC视频创作" loading="lazy">
+                <div class="overlay">
+                    <span class="tag">AIGC</span>
+                    <h3>AIGC视频创作</h3>
+                    <p>DeepSeek · Seedream5.0 · Seedance2.0</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section id="about">
+        <div class="about-grid">
+            <div class="about-avatar-wrap fade-in">
+                <div class="about-avatar">🎨</div>
+            </div>
+            <div class="about-text fade-in">
+                <div class="section-label">ABOUT</div>
+                <h3>张恒瑀</h3>
+                <span class="subtitle">视觉传达设计师</span>
+                <p>江苏师范大学科文学院 · 视觉传达设计专业本科在读（GPA 3.0/4，专业前10%）。擅长用 Photoshop、Illustrator、Cinema 4D、After Effects 等工具将创意转化为视觉作品。</p>
+                <p>热爱探索 AI 与设计的结合点，熟练运用 GPT、Gemini、DeepSeek、即梦、豆包等 AI 工具辅助创作，在 Prompt Engineering 方面积累了丰富的实战经验。曾以 AI 短片获得学院比赛第一名。</p>
+                
+                <div class="about-info-grid">
+                    <div class="info-item">
+                        <div class="label">学校</div>
+                        <div class="value">江苏师范大学科文学院</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">专业</div>
+                        <div class="value">视觉传达设计</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">GPA</div>
+                        <div class="value">3.00/4（前10%）</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">出生</div>
+                        <div class="value">2004.11</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="skills-section fade-in">
+            <div class="section-label">SKILLS</div>
+            <h2 class="section-title">专业 <span>技能</span></h2>
+            <div class="skills-grid" style="margin-top:32px">
+                <div class="skill-tag">Photoshop</div>
+                <div class="skill-tag">Illustrator</div>
+                <div class="skill-tag">Cinema 4D</div>
+                <div class="skill-tag">After Effects</div>
+                <div class="skill-tag">剪映</div>
+                <div class="skill-tag">Premiere</div>
+                <div class="skill-tag">Seedream 2.0/5.0</div>
+                <div class="skill-tag">Seedance 2.0</div>
+                <div class="skill-tag">即梦 AI</div>
+                <div class="skill-tag">Prompt Engineering</div>
+                <div class="skill-tag">GPT / Gemini</div>
+                <div class="skill-tag">DeepSeek</div>
+            </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="fade-in" style="margin-top:80px">
+            <div class="section-label">EXPERIENCE</div>
+            <h2 class="section-title">实习 & <span>经历</span></h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">2026.04 — 2026.05</div>
+                    <div class="timeline-content">
+                        <h4>「星期天的逃逸」创作人</h4>
+                        <span class="org">项目经验</span>
+                        <p>使用即梦无限画布构建文生图、图生视频工作流，运用 Seedance 2.0 创作项目拉片。通过动态分解、关键帧设置和过渡处理解决 AI 短片拼接的连贯性问题，运用 Prompt Engineering 优化 AI 指令准确率。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2024.11 — 2025.06</div>
+                    <div class="timeline-content">
+                        <h4>授课教师</h4>
+                        <span class="org">凤鸣海研学基地</span>
+                        <p>负责学生手工教学与课堂管理，使用 AI 产品做设计普及，通过 3D 建模方式解决教学痛点，定制化教学方案使学员单科成绩从 65 分提升至 85 分，获得 100% 家长满意度。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2024.06 — 2024.08</div>
+                    <div class="timeline-content">
+                        <h4>大堂经理助理</h4>
+                        <span class="org">中国农业银行邳州市支行</span>
+                        <p>负责接待与客户服务，协助完成开户、贷款审查等业务。使用 Photoshop 设计网点春节迎新纳福海报提升留客率，使用 Premiere、剪映剪辑宣传视频获得一致好评。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2023.09 — 至今</div>
+                    <div class="timeline-content">
+                        <h4>宿舍管理员</h4>
+                        <span class="org">求真书院 · 校园经历</span>
+                        <p>使用 Photoshop 设计「小事不小」海报获院级防火禁烟设计大赛二等奖。创作 AI 短片「至暗时刻」带领团队获学院趣味竞赛第一名。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="contact-section">
+        <div class="fade-in">
+            <div class="section-label">CONTACT</div>
+            <h2 class="section-title">Let's <span>Create</span></h2>
+            <p>如果你有有趣的项目想要讨论，或者只是想打个招呼，<br>我很乐意听到你的声音。</p>
+            <div class="contact-links">
+                <a href="mailto:3104221252@qq.com">✉ 3104221252@qq.com</a>
+                <a href="tel:18118583320">📞 18118583320</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 张恒瑀 · 用心设计</p>
+    </footer>
+
+    <script>
+        // ---- Cursor ----
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX; mouseY = e.clientY;
+            dot.style.transform = `translate(${mouseX - 4}px, ${mouseY - 4}px)`;
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.1;
+            ringY += (mouseY - ringY) * 0.1;
+            ring.style.left = ringX + 'px';
+            ring.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        document.querySelectorAll('a, .btn, .work-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                ring.style.width = '60px'; ring.style.height = '60px';
+                ring.style.borderColor = 'rgba(136,136,255,0.5)';
+            });
+            el.addEventListener('mouseleave', () => {
+                ring.style.width = '40px'; ring.style.height = '40px';
+                ring.style.borderColor = 'rgba(136,136,255,0.3)';
+            });
+        });
+
+        // ---- Nav scroll ----
+        window.addEventListener('scroll', () => {
+            document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+        });
+
+        // ---- Scroll fade-in ----
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // ---- Filter ----
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.filter-btn.active')?.classList.remove('active');
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.work-card').forEach(card => {
+                    card.classList.toggle('show', filter === 'all' || card.dataset.category === filter);
+                });
+            });
+        });
+
+        // ---- Lightbox ----
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').classList.add('open');
+        }
+    </script>
+</body>
+</html>
