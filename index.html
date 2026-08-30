@@ -188,16 +188,15 @@
   .works-head .left .sec-sub{margin-bottom:.8rem}
   .works-head .right{text-align:right}
   .works-head .right .tag{display:block;margin-bottom:.35rem}
-  /* 纵向大图展示: 每件作品完整大图, 滚动自然浏览 */
-  .works-list{display:flex;flex-direction:column;gap:clamp(3.5rem,9vh,6rem)}
-  .wcard{width:min(1000px,100%);margin-inline:auto}
-  .wcard-inner{display:flex;flex-direction:column;gap:1.1rem}
+  /* 纵向大图展示: 画框适配作品尺寸, 高度统一+宽度按比例, 作品填满画框 */
+  .works-list{display:flex;flex-direction:column;gap:clamp(3rem,8vh,5rem);align-items:center}
+  .wcard{width:auto;max-width:100%}
+  .wcard-inner{display:flex;flex-direction:column;gap:1rem;align-items:center}
   .art{
-    position:relative;width:100%;aspect-ratio:var(--r,4/5);
-    display:flex;align-items:center;justify-content:center;
+    position:relative;height:clamp(300px,54vh,520px);width:auto;aspect-ratio:var(--r,4/5);max-width:100%;
+    overflow:hidden;
     background:var(--paper2);border-radius:var(--r-card);
     box-shadow:0 22px 55px -24px rgba(43,33,28,.32);
-    overflow:hidden;
   }
   .art::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(120% 120% at 50% 40%,var(--paper),var(--paper2))}
   .art::after{
@@ -206,21 +205,24 @@
     opacity:.12;mix-blend-mode:multiply;
   }
   .art img{
-    position:relative;z-index:1;
-    width:auto;height:auto;max-width:100%;max-height:clamp(300px,62vh,620px);
-    object-fit:contain;transition:transform .8s var(--ease);
+    position:absolute;inset:0;z-index:1;width:100%;height:100%;
+    object-fit:cover;transition:transform .8s var(--ease);
   }
   .wcard:hover .art img{transform:scale(1.02)}
   .wcard:hover .art{box-shadow:0 30px 70px -26px rgba(43,33,28,.42)}
+  /* 窄屏: 画框改宽度驱动, 保证作品完整 */
+  @media (max-width:1250px){
+    .art{height:auto;width:min(100%,860px);aspect-ratio:var(--r,4/5)}
+  }
   /* 标题行 */
-  .wcap{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:0 .2rem}
+  .wcap{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:0 .2rem;width:100%}
   .wcap h3{
     font-family:var(--serif);font-weight:700;font-size:clamp(1.35rem,2.4vw,1.8rem);letter-spacing:.01em;
   }
   .wcap .meta{text-align:right;line-height:1.5}
   .wcap .year{font-family:var(--label);font-size:13px;letter-spacing:.14em;color:var(--accent-deep)}
   /* 多图缩略图行 */
-  .w-thumbs{display:flex;gap:.7rem;flex-wrap:wrap;padding:.2rem .2rem 0}
+  .w-thumbs{display:flex;gap:.7rem;flex-wrap:wrap;padding:.2rem .2rem 0;justify-content:center}
   .w-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;cursor:pointer;opacity:.5;border:2px solid transparent;transition:all .3s var(--ease)}
   .w-thumbs img:hover{opacity:.85}
   .w-thumbs img.on{opacity:1;border-color:var(--accent)}
@@ -286,7 +288,7 @@
 
   /* 真实作品图: 覆盖占位纹理（保留噪点统一质感） */
   .art.art-photo::before{display:none}
-  .art-photo img{position:relative;z-index:1;width:auto;height:auto;max-width:100%;max-height:clamp(300px,62vh,620px);object-fit:contain;transition:transform .8s var(--ease)}
+  .art-photo img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
   .wcard:hover .art-photo img{transform:scale(1.02)}
 
   /* ============ 关于·信息格 / 技能墙 / 经历时间线 ============ */
