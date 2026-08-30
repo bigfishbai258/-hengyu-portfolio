@@ -484,10 +484,15 @@
     .hero-name{font-size:clamp(3.4rem,17vw,5.2rem)}
     .follow-ring{display:none}
     .float-deco{display:block;opacity:1}
-    .fd .fd-shape{opacity:.55}
+    .fd .fd-shape{opacity:.85}
     .works{padding-top:4rem}
-    .wcard,.wcard:nth-child(odd),.wcard:nth-child(even){width:100%;margin:0 !important;flex:none}
-    .works-list{gap:2rem}
+    .wcard,.wcard:nth-child(odd),.wcard:nth-child(even){width:auto;margin:0;flex:none}
+    .wcard:nth-child(odd){align-self:flex-start}
+    .wcard:nth-child(even){align-self:flex-end}
+    .wcard-inner{align-items:center}
+    .rv .art{height:clamp(280px,50vh,460px);width:auto;aspect-ratio:var(--r,4/5)}
+    .rh .art{width:100%;height:auto;aspect-ratio:var(--r,4/5)}
+    .works-list{gap:2.6rem}
     .works-head{margin-bottom:1.6rem}
     .ww{width:46vw;height:46vw}
     .w-thumbs img{width:52px;height:52px}
@@ -1117,8 +1122,8 @@
       fw.style.top = Math.max(2, Math.min(96, topPct)) + "%";
       if (col % 2 === 0) fw.style.left = (2 + (col / 2) * 5 + Math.random() * 1.6) + "%";
       else fw.style.right = (2 + ((col - 1) / 2) * 5 + Math.random() * 1.6) + "%";
-      /* 随机大小: 手机更小 */
-      var fsc = FD_mob ? (.4 + Math.random() * .8) : (.8 + Math.random() * 1.2);
+      /* 随机大小: 手机 0.6-1.4 / 桌面 0.8-2.0 */
+      var fsc = FD_mob ? (.6 + Math.random() * .8) : (.8 + Math.random() * 1.2);
       fw.style.transform = "scale(" + fsc + ")";
       /* 随机动画延迟与周期 */
       fsh.style.animationDelay = (-Math.random() * 13) + "s";
@@ -1129,7 +1134,7 @@
 
   /* ============ 1.23 动态装饰: 鼠标光点拖尾（canvas 粒子） ============ */
   var dust = qs("#dustCanvas");
-  if (dust && fine && !reduce) {
+  if (dust && !reduce) {
     var dctx = dust.getContext("2d");
     var DW, DH, DPR = Math.min(window.devicePixelRatio || 1, 2);
     var resizeDust = function(){
@@ -1158,6 +1163,23 @@
           c: DCOLORS[Math.floor(Math.random() * DCOLORS.length)]
         });
       }
+    }, { passive: true });
+    /* 触摸屏: 手指滑动也撒光点 */
+    window.addEventListener("touchmove", function(e){
+      var t = e.touches[0]; if (!t) return;
+      var now = performance.now();
+      if (now - lastDust < 30) return;
+      lastDust = now;
+      if (dusts.length > 70) dusts.shift();
+      dusts.push({
+        x: t.clientX * DPR + (Math.random() - .5) * 16 * DPR,
+        y: t.clientY * DPR + (Math.random() - .5) * 16 * DPR,
+        vx: (Math.random() - .5) * .6 * DPR,
+        vy: -(Math.random() * .5 + .22) * DPR,
+        r: (Math.random() * 3.6 + 2.8) * DPR,
+        life: 1, decay: .011 + Math.random() * .013,
+        c: DCOLORS[Math.floor(Math.random() * DCOLORS.length)]
+      });
     }, { passive: true });
     (function loopDust(){
       dctx.clearRect(0, 0, DW, DH);
@@ -1215,6 +1237,11 @@
 
   /* ============ 1.3 作品区: 错落大图 + 编号 + 多图缩略图切换 + 入场 reveal ============ */
   var cards = qsa(".wcard");
+  /* 按比例分类: 竖图(rv)高度驱动 / 横图横幅(rh)宽度驱动 —— 手机端排版用 */
+  cards.forEach(function(c){
+    var r = parseFloat(c.style.getPropertyValue("--r")) || 0.8;
+    c.classList.add(r < 1 ? "rv" : "rh");
+  });
   /* 超大作品编号 01-11 */
   cards.forEach(function(card, i){
     var num = document.createElement("span");
