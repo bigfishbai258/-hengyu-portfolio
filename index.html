@@ -196,10 +196,11 @@
     width:max-content;will-change:transform;transform:translate3d(0,0,0);
     perspective:1200px;
   }
-  .wcard{flex:0 0 clamp(300px,30vw,430px);transform-style:preserve-3d}
-  .wcard-inner{transform:translateZ(0)}
+  .wcard{flex:0 0 auto;transform-style:preserve-3d}
+  .wcard-inner{transform:translateZ(0);display:flex;flex-direction:column;align-items:flex-start}
   .art{
-    position:relative;aspect-ratio:4/5;overflow:hidden;
+    position:relative;height:clamp(280px,48vh,450px);width:auto;aspect-ratio:var(--r,4/5);flex:none;
+    overflow:hidden;
     border-radius:999px 999px var(--r-card) var(--r-card);
     border:10px solid var(--mat);box-shadow:var(--shadow);
   }
@@ -398,6 +399,7 @@
       padding:0 6vw 1rem;scrollbar-width:thin;perspective:none;
     }
     .wcard{flex:0 0 78vw;scroll-snap-align:center}
+    .wcard .art{height:auto;width:100%;aspect-ratio:var(--r,4/5)}
     .pan-progress{display:none}
     .pan-count{display:none}
     .works-head .right{text-align:left}
@@ -494,7 +496,7 @@
     <div class="pan" id="pan">
       <div class="pan-sticky">
         <div class="pan-track" id="panTrack">
-          <figure class="wcard" data-tilt data-imgs="images/work01-florasis-a.webp,images/work01-florasis-b.webp" tabindex="0" aria-label="花西子男士系列海报，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:0.71" data-imgs="images/work01-florasis-a.webp,images/work01-florasis-b.webp" tabindex="0" aria-label="花西子男士系列海报，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work01-florasis-a.webp" alt="花西子男士系列海报"></div>
               <figcaption class="wcap">
@@ -503,7 +505,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt data-imgs="images/work02-lightlife-a.webp,images/work02-lightlife-b.webp" tabindex="0" aria-label="轻生活系列海报，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:0.72" data-imgs="images/work02-lightlife-a.webp,images/work02-lightlife-b.webp" tabindex="0" aria-label="轻生活系列海报，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work02-lightlife-a.webp" alt="「轻生活」系列海报"></div>
               <figcaption class="wcap">
@@ -512,7 +514,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt data-imgs="images/work03-oriental-a.webp,images/work03-oriental-b.webp" tabindex="0" aria-label="东方雅韵传统图形，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:0.71" data-imgs="images/work03-oriental-a.webp,images/work03-oriental-b.webp" tabindex="0" aria-label="东方雅韵传统图形，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work03-oriental-a.webp" alt="「东方雅韵」传统图形"></div>
               <figcaption class="wcap">
@@ -521,7 +523,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt data-imgs="images/work04-landmark-a.webp,images/work04-landmark-b.webp" tabindex="0" aria-label="城市地标视觉设计，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:0.71" data-imgs="images/work04-landmark-a.webp,images/work04-landmark-b.webp" tabindex="0" aria-label="城市地标视觉设计，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work04-landmark-a.webp" alt="城市地标视觉设计"></div>
               <figcaption class="wcap">
@@ -530,7 +532,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt tabindex="0" aria-label="香牌香方可视化设计">
+          <figure class="wcard" data-tilt style="--r:0.71" tabindex="0" aria-label="香牌香方可视化设计">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work05-incense-a.webp" alt="香牌香方可视化设计"></div>
               <figcaption class="wcap">
@@ -539,7 +541,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt tabindex="0" aria-label="纳爱斯牙膏IP形象与周边">
+          <figure class="wcard" data-tilt style="--r:2.16" tabindex="0" aria-label="纳爱斯牙膏IP形象与周边">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work06-nice-a.webp" alt="纳爱斯牙膏IP形象与周边"></div>
               <figcaption class="wcap">
@@ -548,7 +550,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt data-imgs="images/work07-c4dpack-a.webp,images/work07-c4dpack-b.webp,images/work07-c4dpack-c.webp" tabindex="0" aria-label="C4D包装设计，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:1.78" data-imgs="images/work07-c4dpack-a.webp,images/work07-c4dpack-b.webp,images/work07-c4dpack-c.webp" tabindex="0" aria-label="C4D包装设计，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work07-c4dpack-a.webp" alt="C4D包装设计"></div>
               <figcaption class="wcap">
@@ -557,7 +559,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt data-imgs="images/work08-c4dscene-a.webp,images/work08-c4dscene-b.webp,images/work08-c4dscene-c.webp" tabindex="0" aria-label="C4D场景设计，点击查看全部图片">
+          <figure class="wcard" data-tilt style="--r:1.78" data-imgs="images/work08-c4dscene-a.webp,images/work08-c4dscene-b.webp,images/work08-c4dscene-c.webp" tabindex="0" aria-label="C4D场景设计，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work08-c4dscene-a.webp" alt="C4D场景设计"></div>
               <figcaption class="wcap">
@@ -566,7 +568,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt tabindex="0" aria-label="AE动效视频，扫码观看">
+          <figure class="wcard" data-tilt style="--r:1" tabindex="0" aria-label="AE动效视频，扫码观看">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work09-aemotion-a.webp" alt="AE动效视频"></div>
               <figcaption class="wcap">
@@ -575,7 +577,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt tabindex="0" aria-label="AE动效剪辑视频，扫码观看">
+          <figure class="wcard" data-tilt style="--r:1" tabindex="0" aria-label="AE动效剪辑视频，扫码观看">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work10-aecut-a.webp" alt="AE动效剪辑视频"></div>
               <figcaption class="wcap">
@@ -584,7 +586,7 @@
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt tabindex="0" aria-label="AI短片星期天的逃逸，扫码观看">
+          <figure class="wcard" data-tilt style="--r:1" tabindex="0" aria-label="AI短片星期天的逃逸，扫码观看">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work11-aigc-a.webp" alt="AI短片「星期天的逃逸」"></div>
               <figcaption class="wcap">
