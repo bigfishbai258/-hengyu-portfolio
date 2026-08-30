@@ -348,6 +348,23 @@
   .foot-inner .tag{font-size:12px}
   .foot-note{font-family:var(--label);font-size:13px;letter-spacing:.06em;color:var(--accent-deep)}
 
+  /* ============ Lightbox: 点作品卡看全部图 ============ */
+  .lightbox{position:fixed;inset:0;z-index:100;background:rgba(43,33,28,.84);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;opacity:0;visibility:hidden;transition:opacity .45s var(--ease),visibility .45s}
+  .lightbox.open{opacity:1;visibility:visible}
+  .lb-stage{position:relative;max-width:min(1100px,92vw);display:flex;align-items:center;justify-content:center}
+  .lb-img{max-width:min(1100px,88vw);max-height:74vh;object-fit:contain;border-radius:var(--r-card);box-shadow:0 30px 90px rgba(0,0,0,.45)}
+  .lb-close{position:absolute;top:1.2rem;right:1.6rem;background:var(--mat);border:none;width:44px;height:44px;border-radius:50%;font-size:1.7rem;line-height:1;color:var(--ink);cursor:pointer;transition:transform .35s var(--ease)}
+  .lb-close:hover{transform:rotate(90deg)}
+  .lb-prev,.lb-next{position:absolute;top:50%;transform:translateY(-50%);background:var(--mat);border:none;width:52px;height:52px;border-radius:50%;font-size:1.9rem;line-height:1;color:var(--ink);cursor:pointer;opacity:.85;transition:all .3s var(--ease);z-index:2}
+  .lb-prev{left:-1.2rem}.lb-next{right:-1.2rem}
+  .lb-prev:hover,.lb-next:hover{opacity:1;transform:translateY(-50%) scale(1.08)}
+  .lb-thumbs{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;max-width:88vw}
+  .lb-thumbs img{width:76px;height:76px;object-fit:cover;border-radius:10px;cursor:pointer;opacity:.45;border:2px solid transparent;transition:all .3s var(--ease)}
+  .lb-thumbs img:hover{opacity:.85}
+  .lb-thumbs img.on{opacity:1;border-color:var(--accent)}
+  .lb-hint{font-family:var(--label);font-size:12px;letter-spacing:.14em;color:rgba(251,242,228,.65);text-transform:uppercase}
+  @media (max-width:860px){.lb-prev{left:.4rem}.lb-next{right:.4rem}}
+
   /* ============ 移动端折叠（<768 动效降级） ============ */
   @media (max-width:1000px){
     .hero-inner{grid-template-columns:1fr;gap:2.5rem}
@@ -477,102 +494,102 @@
     <div class="pan" id="pan">
       <div class="pan-sticky">
         <div class="pan-track" id="panTrack">
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work01-florasis-a.webp,images/work01-florasis-b.webp" tabindex="0" aria-label="花西子男士系列海报，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_04.webp" alt="花西子男士系列海报"></div>
+              <div class="art art-photo"><img src="images/work01-florasis-a.webp" alt="花西子男士系列海报"></div>
               <figcaption class="wcap">
                 <h3>花西子男士系列海报</h3>
                 <span class="meta"><span class="tag">平面设计</span><br><span class="year">PS · Seedream 2.0</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work02-lightlife-a.webp,images/work02-lightlife-b.webp" tabindex="0" aria-label="轻生活系列海报，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_05.webp" alt="轻生活主题海报"></div>
+              <div class="art art-photo"><img src="images/work02-lightlife-a.webp" alt="「轻生活」系列海报"></div>
               <figcaption class="wcap">
-                <h3>"轻生活" 主题海报</h3>
+                <h3>「轻生活」系列海报</h3>
                 <span class="meta"><span class="tag">平面设计</span><br><span class="year">PS · Seedream 2.0</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work03-oriental-a.webp,images/work03-oriental-b.webp" tabindex="0" aria-label="东方雅韵传统图形，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_06.webp" alt="东方雅韵传统图形"></div>
+              <div class="art art-photo"><img src="images/work03-oriental-a.webp" alt="「东方雅韵」传统图形"></div>
               <figcaption class="wcap">
-                <h3>"东方雅韵" 传统图形</h3>
+                <h3>「东方雅韵」传统图形</h3>
                 <span class="meta"><span class="tag">平面设计</span><br><span class="year">PS · Seedream 2.0</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work04-landmark-a.webp,images/work04-landmark-b.webp" tabindex="0" aria-label="城市地标视觉设计，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_07.webp" alt="城市地标视觉设计"></div>
+              <div class="art art-photo"><img src="images/work04-landmark-a.webp" alt="城市地标视觉设计"></div>
               <figcaption class="wcap">
                 <h3>城市地标视觉设计</h3>
                 <span class="meta"><span class="tag">平面设计</span><br><span class="year">PS · AI · Seedream 2.0</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt tabindex="0" aria-label="香牌香方可视化设计">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_08.webp" alt="香牌香方可视化设计"></div>
+              <div class="art art-photo"><img src="images/work05-incense-a.webp" alt="香牌香方可视化设计"></div>
               <figcaption class="wcap">
                 <h3>香牌香方可视化设计</h3>
                 <span class="meta"><span class="tag">平面设计</span><br><span class="year">PS · AI · Seedream 2.0</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt tabindex="0" aria-label="纳爱斯牙膏IP形象与周边">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_09.webp" alt="纳爱斯牙膏IP形象设计"></div>
+              <div class="art art-photo"><img src="images/work06-nice-a.webp" alt="纳爱斯牙膏IP形象与周边"></div>
               <figcaption class="wcap">
-                <h3>纳爱斯牙膏IP形象设计</h3>
-                <span class="meta"><span class="tag">IP设计</span><br><span class="year">Illustrator · 周边视觉</span></span>
+                <h3>纳爱斯牙膏IP形象与周边</h3>
+                <span class="meta"><span class="tag">平面设计</span><br><span class="year">Illustrator · 周边视觉</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work07-c4dpack-a.webp,images/work07-c4dpack-b.webp,images/work07-c4dpack-c.webp" tabindex="0" aria-label="C4D包装设计，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_10.webp" alt="C4D建模作品概览"></div>
-              <figcaption class="wcap">
-                <h3>C4D建模作品 · 概览</h3>
-                <span class="meta"><span class="tag">3D建模</span><br><span class="year">Cinema 4D</span></span>
-              </figcaption>
-            </div>
-          </figure>
-          <figure class="wcard" data-tilt>
-            <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_11.webp" alt="C4D包装设计"></div>
+              <div class="art art-photo"><img src="images/work07-c4dpack-a.webp" alt="C4D包装设计"></div>
               <figcaption class="wcap">
                 <h3>C4D包装设计</h3>
-                <span class="meta"><span class="tag">3D建模</span><br><span class="year">C4D · 产品渲染</span></span>
+                <span class="meta"><span class="tag">3D建模</span><br><span class="year">Cinema 4D · 产品渲染</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt data-imgs="images/work08-c4dscene-a.webp,images/work08-c4dscene-b.webp,images/work08-c4dscene-c.webp" tabindex="0" aria-label="C4D场景设计，点击查看全部图片">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_12.webp" alt="C4D建模设计"></div>
+              <div class="art art-photo"><img src="images/work08-c4dscene-a.webp" alt="C4D场景设计"></div>
               <figcaption class="wcap">
-                <h3>C4D建模设计</h3>
-                <span class="meta"><span class="tag">3D建模</span><br><span class="year">Cinema 4D</span></span>
+                <h3>C4D场景设计</h3>
+                <span class="meta"><span class="tag">3D建模</span><br><span class="year">Cinema 4D · 场景渲染</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt tabindex="0" aria-label="AE动效视频，扫码观看">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_13.webp" alt="AE动效与视频剪辑"></div>
+              <div class="art art-photo"><img src="images/work09-aemotion-a.webp" alt="AE动效视频"></div>
               <figcaption class="wcap">
-                <h3>AE动效与视频剪辑</h3>
-                <span class="meta"><span class="tag">动态视觉</span><br><span class="year">AE · 剪映</span></span>
+                <h3>AE动效视频</h3>
+                <span class="meta"><span class="tag">视频动效</span><br><span class="year">After Effects · 扫码观看</span></span>
               </figcaption>
             </div>
           </figure>
-          <figure class="wcard" data-tilt>
+          <figure class="wcard" data-tilt tabindex="0" aria-label="AE动效剪辑视频，扫码观看">
             <div class="wcard-inner">
-              <div class="art art-photo"><img src="images/page_14.webp" alt="AIGC视频创作"></div>
+              <div class="art art-photo"><img src="images/work10-aecut-a.webp" alt="AE动效剪辑视频"></div>
               <figcaption class="wcap">
-                <h3>AIGC视频创作</h3>
-                <span class="meta"><span class="tag">动态视觉</span><br><span class="year">DeepSeek · Seedream 5.0 · Seedance 2.0</span></span>
+                <h3>AE动效剪辑视频</h3>
+                <span class="meta"><span class="tag">视频动效</span><br><span class="year">AE · 剪映 · 扫码观看</span></span>
+              </figcaption>
+            </div>
+          </figure>
+          <figure class="wcard" data-tilt tabindex="0" aria-label="AI短片星期天的逃逸，扫码观看">
+            <div class="wcard-inner">
+              <div class="art art-photo"><img src="images/work11-aigc-a.webp" alt="AI短片「星期天的逃逸」"></div>
+              <figcaption class="wcap">
+                <h3>AI短片「星期天的逃逸」</h3>
+                <span class="meta"><span class="tag">视频动效</span><br><span class="year">DeepSeek · Seedream 5.0 · Seedance 2.0</span></span>
               </figcaption>
             </div>
           </figure>
