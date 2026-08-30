@@ -51,18 +51,26 @@
   img,svg{display:block}
   :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
 
-  /* ============ 动态装饰: 背景漂浮色块(全页) ============ */
+  /* ============ 动态装饰: 背景漂浮色块(全页, 鼠标视差) ============ */
   .bg-blobs{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-  .bb{position:absolute;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(64px);opacity:.5;animation:bbfloat 18s ease-in-out infinite alternate}
-  .bb1{width:34vw;height:34vw;top:-7vw;right:-9vw;background:radial-gradient(circle at 35% 30%,rgba(255,199,44,.5),rgba(255,179,32,.12) 70%)}
-  .bb2{width:26vw;height:26vw;bottom:-9vw;left:-7vw;background:radial-gradient(circle at 40% 40%,rgba(226,74,31,.4),rgba(226,74,31,.07) 75%);animation-delay:-5s;animation-duration:23s}
-  .bb3{width:18vw;height:18vw;top:36%;left:10%;background:radial-gradient(circle at 40% 40%,rgba(46,134,222,.26),rgba(46,134,222,.05) 75%);animation-delay:-9s;animation-duration:27s}
-  .bb4{width:15vw;height:15vw;top:58%;right:14%;background:radial-gradient(circle at 40% 40%,rgba(15,163,163,.24),rgba(15,163,163,.04) 75%);animation-delay:-13s;animation-duration:21s}
-  @keyframes bbfloat{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(4vw,-3vh) scale(1.14) rotate(9deg)}}
+  .bbw{position:absolute;will-change:transform}
+  .bbw1{top:-7vw;right:-9vw;width:36vw;height:36vw}
+  .bbw2{bottom:-9vw;left:-7vw;width:28vw;height:28vw}
+  .bbw3{top:36%;left:8%;width:19vw;height:19vw}
+  .bbw4{top:58%;right:12%;width:16vw;height:16vw}
+  .bb{position:absolute;inset:0;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(48px);opacity:.62;animation:bbfloat 18s ease-in-out infinite alternate}
+  .bb1{background:radial-gradient(circle at 35% 30%,rgba(255,199,44,.6),rgba(255,179,32,.16) 70%)}
+  .bb2{background:radial-gradient(circle at 40% 40%,rgba(226,74,31,.5),rgba(226,74,31,.09) 75%);animation-delay:-5s;animation-duration:23s}
+  .bb3{background:radial-gradient(circle at 40% 40%,rgba(46,134,222,.34),rgba(46,134,222,.07) 75%);animation-delay:-9s;animation-duration:27s}
+  .bb4{background:radial-gradient(circle at 40% 40%,rgba(15,163,163,.3),rgba(15,163,163,.06) 75%);animation-delay:-13s;animation-duration:21s}
+  @keyframes bbfloat{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(3vw,-2.5vh) scale(1.14) rotate(9deg)}}
 
   /* ============ 动态装饰: 鼠标阳光光斑 ============ */
   .sun-glow{position:fixed;top:0;left:0;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.4s var(--ease);will-change:transform}
-  .sun-glow::before{content:"";position:absolute;width:48vmax;height:48vmax;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,199,44,.13),rgba(255,179,32,.04) 45%,transparent 70%)}
+  .sun-glow::before{content:"";position:absolute;width:48vmax;height:48vmax;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,199,44,.15),rgba(255,179,32,.05) 45%,transparent 70%)}
+
+  /* ============ 动态装饰: 鼠标光点拖尾(canvas) ============ */
+  #dustCanvas{position:fixed;inset:0;z-index:6;pointer-events:none}
 
   /* ============ 动态装饰: 顶部滚动光谱进度条 ============ */
   .scroll-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:90;pointer-events:none}
@@ -433,8 +441,14 @@
 <a class="skip" href="#works" style="position:absolute;left:-9999px">跳到作品</a>
 
 <!-- ============ 动态装饰层 ============ -->
-<div class="bg-blobs" aria-hidden="true"><i class="bb bb1"></i><i class="bb bb2"></i><i class="bb bb3"></i><i class="bb bb4"></i></div>
+<div class="bg-blobs" aria-hidden="true">
+  <div class="bbw bbw1"><i class="bb bb1"></i></div>
+  <div class="bbw bbw2"><i class="bb bb2"></i></div>
+  <div class="bbw bbw3"><i class="bb bb3"></i></div>
+  <div class="bbw bbw4"><i class="bb bb4"></i></div>
+</div>
 <div class="sun-glow" id="sunGlow" aria-hidden="true"></div>
+<canvas id="dustCanvas" aria-hidden="true"></canvas>
 <div class="scroll-progress" aria-hidden="true"><i id="scrollBar"></i></div>
 
 <!-- ============ 导航 ============ -->
@@ -934,6 +948,68 @@
     };
     lenis.on("scroll", updateBar);
     updateBar();
+  }
+
+  /* ============ 1.22 动态装饰: 背景色块鼠标视差（景深分层） ============ */
+  if (fine) {
+    qsa(".bbw").forEach(function(b, i){
+      var amt = 16 + i * 10;   /* 分层深度: 16/26/36/46 */
+      var qx = gsap.quickTo(b, "x", { duration: 1.1, ease: "power3.out" });
+      var qy = gsap.quickTo(b, "y", { duration: 1.1, ease: "power3.out" });
+      window.addEventListener("mousemove", function(e){
+        var nx = (e.clientX / window.innerWidth - .5) * 2;
+        var ny = (e.clientY / window.innerHeight - .5) * 2;
+        qx(-nx * amt); qy(-ny * amt);
+      }, { passive: true });
+    });
+  }
+
+  /* ============ 1.23 动态装饰: 鼠标光点拖尾（canvas 粒子） ============ */
+  var dust = qs("#dustCanvas");
+  if (dust && fine && !reduce) {
+    var dctx = dust.getContext("2d");
+    var DW, DH, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var resizeDust = function(){
+      DW = dust.width = window.innerWidth * DPR;
+      DH = dust.height = window.innerHeight * DPR;
+      dust.style.width = window.innerWidth + "px";
+      dust.style.height = window.innerHeight + "px";
+    };
+    resizeDust();
+    window.addEventListener("resize", resizeDust);
+    var DCOLORS = ["226,74,31", "255,199,44", "46,134,222", "15,163,163", "242,109,133", "255,179,32"];
+    var dusts = [], lastDust = 0;
+    window.addEventListener("mousemove", function(e){
+      var now = performance.now();
+      if (now - lastDust < 26) return;   /* 限速 */
+      lastDust = now;
+      for (var i = 0; i < 2; i++) {
+        if (dusts.length > 70) dusts.shift();
+        dusts.push({
+          x: e.clientX * DPR + (Math.random() - .5) * 16 * DPR,
+          y: e.clientY * DPR + (Math.random() - .5) * 16 * DPR,
+          vx: (Math.random() - .5) * .55 * DPR,
+          vy: -(Math.random() * .55 + .18) * DPR,
+          r: (Math.random() * 3.4 + 2.4) * DPR,
+          life: 1, decay: .011 + Math.random() * .013,
+          c: DCOLORS[Math.floor(Math.random() * DCOLORS.length)]
+        });
+      }
+    }, { passive: true });
+    (function loopDust(){
+      dctx.clearRect(0, 0, DW, DH);
+      for (var i = dusts.length - 1; i >= 0; i--) {
+        var p = dusts[i];
+        p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        if (p.life <= 0) { dusts.splice(i, 1); continue; }
+        var g = dctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.6);
+        g.addColorStop(0, "rgba(" + p.c + "," + (p.life * .5) + ")");
+        g.addColorStop(1, "rgba(" + p.c + ",0)");
+        dctx.fillStyle = g;
+        dctx.beginPath(); dctx.arc(p.x, p.y, p.r * 2.6, 0, Math.PI * 2); dctx.fill();
+      }
+      requestAnimationFrame(loopDust);
+    })();
   }
 
   /* ============ 1.3 作品区: 错落大图 + 编号 + 多图缩略图切换 + 入场 reveal ============ */
