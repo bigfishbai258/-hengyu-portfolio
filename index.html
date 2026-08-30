@@ -51,6 +51,23 @@
   img,svg{display:block}
   :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
 
+  /* ============ 动态装饰: 背景漂浮色块(全页) ============ */
+  .bg-blobs{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  .bb{position:absolute;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(64px);opacity:.5;animation:bbfloat 18s ease-in-out infinite alternate}
+  .bb1{width:34vw;height:34vw;top:-7vw;right:-9vw;background:radial-gradient(circle at 35% 30%,rgba(255,199,44,.5),rgba(255,179,32,.12) 70%)}
+  .bb2{width:26vw;height:26vw;bottom:-9vw;left:-7vw;background:radial-gradient(circle at 40% 40%,rgba(226,74,31,.4),rgba(226,74,31,.07) 75%);animation-delay:-5s;animation-duration:23s}
+  .bb3{width:18vw;height:18vw;top:36%;left:10%;background:radial-gradient(circle at 40% 40%,rgba(46,134,222,.26),rgba(46,134,222,.05) 75%);animation-delay:-9s;animation-duration:27s}
+  .bb4{width:15vw;height:15vw;top:58%;right:14%;background:radial-gradient(circle at 40% 40%,rgba(15,163,163,.24),rgba(15,163,163,.04) 75%);animation-delay:-13s;animation-duration:21s}
+  @keyframes bbfloat{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(4vw,-3vh) scale(1.14) rotate(9deg)}}
+
+  /* ============ 动态装饰: 鼠标阳光光斑 ============ */
+  .sun-glow{position:fixed;top:0;left:0;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.4s var(--ease);will-change:transform}
+  .sun-glow::before{content:"";position:absolute;width:48vmax;height:48vmax;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,199,44,.13),rgba(255,179,32,.04) 45%,transparent 70%)}
+
+  /* ============ 动态装饰: 顶部滚动光谱进度条 ============ */
+  .scroll-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:90;pointer-events:none}
+  .scroll-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--amber),var(--teal),var(--sky));transform:scaleX(0);transform-origin:left}
+
   /* ============ 通用 ============ */
   .wrap{width:min(1280px,92vw);margin:0 auto}
   .sec-title{
@@ -188,10 +205,19 @@
   .works-head .left .sec-sub{margin-bottom:.8rem}
   .works-head .right{text-align:right}
   .works-head .right .tag{display:block;margin-bottom:.35rem}
-  /* 纵向大图展示: 画框适配作品尺寸, 高度统一+宽度按比例, 作品填满画框 */
-  .works-list{display:flex;flex-direction:column;gap:clamp(3rem,8vh,5rem);align-items:center}
-  .wcard{width:auto;max-width:100%}
-  .wcard-inner{display:flex;flex-direction:column;gap:1rem;align-items:center}
+  /* 纵向大图展示: 画框适配作品尺寸, 错落交错布局(参考站风格) */
+  .works-list{display:flex;flex-direction:column;gap:clamp(3.5rem,10vh,7rem)}
+  .wcard{width:auto;max-width:100%;margin-inline:auto}
+  .wcard:nth-child(odd){margin-right:auto;margin-left:clamp(0rem,5vw,5rem)}
+  .wcard:nth-child(even){margin-left:auto;margin-right:clamp(0rem,5vw,5rem)}
+  .wcard-inner{display:flex;flex-direction:column;gap:1rem;align-items:center;position:relative}
+  /* 超大作品编号(水印式) */
+  .w-num{
+    position:absolute;top:-2.1rem;left:-.4rem;z-index:3;pointer-events:none;
+    font-family:var(--serif);font-weight:700;font-style:italic;
+    font-size:clamp(3rem,5vw,4.4rem);line-height:1;letter-spacing:.02em;
+    color:rgba(43,33,28,.2);
+  }
   .art{
     position:relative;height:clamp(300px,54vh,520px);width:auto;aspect-ratio:var(--r,4/5);max-width:100%;
     overflow:hidden;
@@ -208,11 +234,12 @@
     position:absolute;inset:0;z-index:1;width:100%;height:100%;
     object-fit:cover;transition:transform .8s var(--ease);
   }
-  .wcard:hover .art img{transform:scale(1.02)}
+  .wcard:hover .art img{transform:scale(1.03)}
   .wcard:hover .art{box-shadow:0 30px 70px -26px rgba(43,33,28,.42)}
-  /* 窄屏: 画框改宽度驱动, 保证作品完整 */
+  /* 窄屏: 画框改宽度驱动, 恢复居中(不再交错) */
   @media (max-width:1250px){
     .art{height:auto;width:min(100%,860px);aspect-ratio:var(--r,4/5)}
+    .wcard:nth-child(odd),.wcard:nth-child(even){margin-inline:auto}
   }
   /* 标题行 */
   .wcap{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:0 .2rem;width:100%}
@@ -404,6 +431,11 @@
 </head>
 <body>
 <a class="skip" href="#works" style="position:absolute;left:-9999px">跳到作品</a>
+
+<!-- ============ 动态装饰层 ============ -->
+<div class="bg-blobs" aria-hidden="true"><i class="bb bb1"></i><i class="bb bb2"></i><i class="bb bb3"></i><i class="bb bb4"></i></div>
+<div class="sun-glow" id="sunGlow" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"><i id="scrollBar"></i></div>
 
 <!-- ============ 导航 ============ -->
 <header class="nav">
@@ -879,8 +911,40 @@
     xPercent: -50, duration: 10, ease: "sine.inOut", yoyo: true, repeat: -1
   });
 
-  /* ============ 1.3 作品区: 纵向大图 + 多图缩略图切换 + 入场 reveal ============ */
+  /* ============ 1.21 动态装饰: 鼠标阳光光斑 + 滚动进度条 ============ */
+  var glow = qs("#sunGlow");
+  if (glow && fine) {
+    var gx = window.innerWidth / 2, gy = window.innerHeight / 2, cx = gx, cy = gy, idle = null;
+    window.addEventListener("mousemove", function(e){
+      gx = e.clientX; gy = e.clientY;
+      if (glow.style.opacity !== "1") glow.style.opacity = "1";
+      clearTimeout(idle);
+      idle = setTimeout(function(){ glow.style.opacity = "0"; }, 2600);
+    }, { passive: true });
+    gsap.ticker.add(function(){
+      cx += (gx - cx) * .07; cy += (gy - cy) * .07;
+      glow.style.transform = "translate3d(" + (cx - 24) + "px," + (cy - 24) + "px,0)";
+    });
+  }
+  var sbar = qs("#scrollBar");
+  if (sbar && !reduce) {
+    var updateBar = function(){
+      var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      sbar.style.transform = "scaleX(" + (window.scrollY / max) + ")";
+    };
+    lenis.on("scroll", updateBar);
+    updateBar();
+  }
+
+  /* ============ 1.3 作品区: 错落大图 + 编号 + 多图缩略图切换 + 入场 reveal ============ */
   var cards = qsa(".wcard");
+  /* 超大作品编号 01-11 */
+  cards.forEach(function(card, i){
+    var num = document.createElement("span");
+    num.className = "w-num";
+    num.textContent = ("0" + (i + 1)).slice(-2);
+    card.querySelector(".wcard-inner").appendChild(num);
+  });
   /* 多图作品: 生成缩略图行, 点击切换大图 */
   cards.forEach(function(card){
     var imgs = (card.getAttribute("data-imgs") || "").split(",").filter(Boolean);
@@ -904,10 +968,10 @@
     });
     card.querySelector(".wcard-inner").appendChild(row);
   });
-  /* 入场: 卡片逐个上浮揭示（stagger, huashu 缓动） */
+  /* 入场: 卡片逐个上浮+缩放揭示（stagger, huashu 缓动） */
   qsa(".wcard").forEach(function(c, i){
-    gsap.fromTo(c, { y: 56, opacity: 0 }, {
-      y: 0, opacity: 1, duration: 1.1, ease: "huashu", delay: (i % 3) * .09,
+    gsap.fromTo(c, { y: 64, opacity: 0, scale: 1.05 }, {
+      y: 0, opacity: 1, scale: 1, duration: 1.15, ease: "huashu", delay: (i % 3) * .09,
       scrollTrigger: { trigger: c, start: "top 88%", once: true },
       onComplete: function(){ gsap.set(c, { clearProps: "transform" }); }
     });
