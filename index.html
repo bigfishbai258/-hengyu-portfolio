@@ -484,7 +484,11 @@
     .hero-name{font-size:clamp(3.4rem,17vw,5.2rem)}
     .float-deco,.follow-ring{display:none}
     .works{padding-top:4rem}
-    .wcard{width:100%}
+    .wcard,.wcard:nth-child(odd),.wcard:nth-child(even){width:100%;margin:0 !important;flex:none}
+    .works-list{gap:2rem}
+    .works-head{margin-bottom:1.6rem}
+    .ww{width:46vw;height:46vw}
+    .w-thumbs img{width:52px;height:52px}
     .wcap{flex-direction:column;align-items:flex-start;gap:.3rem}
     .wcap .meta{text-align:left}
     .works-head .right{text-align:left}
@@ -1231,12 +1235,12 @@
     });
     card.querySelector(".wcard-inner").appendChild(row);
   });
-  /* 入场: 卡片逐个上浮+缩放揭示（stagger, huashu 缓动） */
+  /* 入场: 卡片逐个上浮+缩放揭示（stagger, huashu 缓动; 手机端缩放几乎取消防溢出） */
+  var isMobile = window.matchMedia("(max-width: 860px)").matches;
   qsa(".wcard").forEach(function(c, i){
-    gsap.fromTo(c, { y: 64, opacity: 0, scale: 1.05 }, {
+    gsap.fromTo(c, { y: isMobile ? 34 : 64, opacity: 0, scale: isMobile ? 1.005 : 1.05 }, {
       y: 0, opacity: 1, scale: 1, duration: 1.15, ease: "huashu", delay: (i % 3) * .09,
-      scrollTrigger: { trigger: c, start: "top 88%", once: true },
-      onComplete: function(){ gsap.set(c, { clearProps: "transform" }); }
+      scrollTrigger: { trigger: c, start: "top 92%", once: true }
     });
   });
   /* hover: 大图轻微浮起（不做3D倾斜, 保持作品完整感） */
