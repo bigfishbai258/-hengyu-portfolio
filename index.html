@@ -57,15 +57,23 @@
   .bg-blobs{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
   .bbw{position:absolute;will-change:transform}
   .bbw1{top:-7vw;right:-9vw;width:38vw;height:38vw}
-  .bbw2{top:28%;left:-7vw;width:30vw;height:30vw}
-  .bbw3{top:52%;right:-6vw;width:20vw;height:20vw}
-  .bbw4{top:74%;left:6vw;width:17vw;height:17vw}
+  .bbw2{top:16%;left:-7vw;width:30vw;height:30vw}
+  .bbw3{top:30%;right:-8vw;width:24vw;height:24vw}
+  .bbw4{top:44%;left:-6vw;width:22vw;height:22vw}
+  .bbw5{top:56%;right:-7vw;width:26vw;height:26vw}
+  .bbw6{top:68%;left:-5vw;width:20vw;height:20vw}
+  .bbw7{top:80%;right:-6vw;width:22vw;height:22vw}
+  .bbw8{top:92%;left:10vw;width:18vw;height:18vw}
   .bb{position:absolute;inset:0;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(26px);opacity:.9;animation:bbfloat 18s ease-in-out infinite alternate}
   .bb1{background:radial-gradient(circle at 35% 30%,rgba(255,199,44,.85),rgba(255,179,32,.35) 70%)}
   .bb2{background:radial-gradient(circle at 40% 40%,rgba(226,74,31,.72),rgba(226,74,31,.22) 75%);animation-delay:-5s;animation-duration:23s}
   .bb3{background:radial-gradient(circle at 40% 40%,rgba(46,134,222,.6),rgba(46,134,222,.16) 75%);animation-delay:-9s;animation-duration:27s}
   .bb4{background:radial-gradient(circle at 40% 40%,rgba(15,163,163,.55),rgba(15,163,163,.14) 75%);animation-delay:-13s;animation-duration:21s}
-  @keyframes bbfloat{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(3vw,-2.5vh) scale(1.14) rotate(9deg)}}
+  .bb5{background:radial-gradient(circle at 40% 40%,rgba(255,179,32,.62),rgba(255,179,32,.18) 75%);animation-delay:-3s;animation-duration:25s}
+  .bb6{background:radial-gradient(circle at 40% 40%,rgba(226,74,31,.6),rgba(226,74,31,.16) 75%);animation-delay:-8s;animation-duration:29s}
+  .bb7{background:radial-gradient(circle at 40% 40%,rgba(46,134,222,.55),rgba(46,134,222,.14) 75%);animation-delay:-12s;animation-duration:22s}
+  .bb8{background:radial-gradient(circle at 40% 40%,rgba(15,163,163,.5),rgba(15,163,163,.12) 75%);animation-delay:-16s;animation-duration:26s}
+  @keyframes bbfloat{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(4vw,-3vh) scale(1.16) rotate(9deg)}}
 
   /* ============ 动态装饰: 鼠标阳光光斑 ============ */
   .sun-glow{position:fixed;top:0;left:0;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.4s var(--ease);will-change:transform}
@@ -477,16 +485,14 @@
   <div class="bbw bbw2"><i class="bb bb2"></i></div>
   <div class="bbw bbw3"><i class="bb bb3"></i></div>
   <div class="bbw bbw4"><i class="bb bb4"></i></div>
+  <div class="bbw bbw5"><i class="bb bb5"></i></div>
+  <div class="bbw bbw6"><i class="bb bb6"></i></div>
+  <div class="bbw bbw7"><i class="bb bb7"></i></div>
+  <div class="bbw bbw8"><i class="bb bb8"></i></div>
 </div>
 <div class="sun-glow" id="sunGlow" aria-hidden="true"></div>
 <canvas id="dustCanvas" aria-hidden="true"></canvas>
-<div class="float-deco" aria-hidden="true">
-  <div class="fd fd1"><i class="fd-shape fd-ring"></i></div>
-  <div class="fd fd2"><i class="fd-shape fd-dot"></i></div>
-  <div class="fd fd3"><i class="fd-shape fd-cross"></i></div>
-  <div class="fd fd4"><i class="fd-shape fd-square"></i></div>
-  <div class="fd fd5"><i class="fd-shape fd-tri"></i></div>
-</div>
+<div class="float-deco" aria-hidden="true"></div>
 <div class="follow-ring" id="followRing" aria-hidden="true"></div>
 <div class="scroll-progress" aria-hidden="true"><i id="scrollBar"></i></div>
 
@@ -971,10 +977,10 @@
     scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 }
   });
 
-  /* ============ 1.2 光谱缎带: 底部缎带滚动 scaleX（scrub，进视口拉开） ============ */
+  /* ============ 1.2 光谱缎带: 底部缎带滚动 scaleX（end=top 300px, 滚到底必满） ============ */
   gsap.fromTo("#spectrumBottom", { scaleX: 0 }, {
     scaleX: 1, ease: "none",
-    scrollTrigger: { trigger: "#spectrumBottom", start: "top 95%", end: "bottom 30%", scrub: 1, invalidateOnRefresh: true }
+    scrollTrigger: { trigger: "#spectrumBottom", start: "top 95%", end: "top 450px", scrub: 1, invalidateOnRefresh: true }
   });
   /* 两条缎带的色块持续微流动（10s 循环，sine.inOut，只动 transform） */
   gsap.to(".spectrum .spectrum-flow", {
@@ -1045,14 +1051,28 @@
         scrollTrigger: { trigger: ".works", start: "top bottom", end: "bottom top", scrub: 1.2, invalidateOnRefresh: true }
       });
     });
-    /* 漂浮几何元素: 滚动时缩放呼吸(进度驱动) */
-    qsa(".fd").forEach(function(fd, i){
-      var s1 = .4 + (i % 3) * .15, s2 = 1.6 + (i % 2) * .3;
-      gsap.fromTo(fd, { scale: s1 }, {
-        scale: s2, ease: "none",
-        scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.4, invalidateOnRefresh: true }
-      });
-    });
+  }
+
+  /* ============ 1.23b 漂浮几何: JS 随机生成(数量/位置/形状/大小) ============ */
+  var fdBox = qs(".float-deco");
+  if (fdBox) {
+    var FD_SHAPES = ["fd-ring", "fd-dot", "fd-cross", "fd-square", "fd-tri"];
+    var FD_N = 16;
+    for (var fi = 0; fi < FD_N; fi++) {
+      var fw = document.createElement("div");
+      fw.className = "fd";
+      var fsh = document.createElement("i");
+      fsh.className = "fd-shape " + FD_SHAPES[Math.floor(Math.random() * FD_SHAPES.length)];
+      fw.appendChild(fsh);
+      /* 随机位置: 全页 4%-92%, 左右边缘 1%-10% */
+      fw.style.top = (4 + Math.random() * 88) + "%";
+      fw.style[Math.random() < .5 ? "left" : "right"] = (1 + Math.random() * 9) + "%";
+      /* 随机大小 0.6-1.5 (fd 层, GSAP 磁斥会保留 scale) */
+      fw.style.transform = "scale(" + (.6 + Math.random() * .9).toFixed(2) + ")";
+      /* 随机动画延迟 */
+      fsh.style.animationDelay = (-Math.random() * 13) + "s";
+      fdBox.appendChild(fw);
+    }
   }
 
   /* ============ 1.23 动态装饰: 鼠标光点拖尾（canvas 粒子） ============ */
@@ -1103,10 +1123,10 @@
     })();
   }
 
-  /* ============ 1.24 动态装饰: 漂浮几何元素(鼠标靠近弹开) ============ */
+  /* ============ 1.24 动态装饰: 漂浮几何元素(鼠标靠近弹开, document委托) ============ */
   if (fine) {
-    qsa(".fd").forEach(function(fd){
-      window.addEventListener("mousemove", function(e){
+    document.addEventListener("mousemove", function(e){
+      qsa(".fd").forEach(function(fd){
         var r = fd.getBoundingClientRect();
         var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         var dx = cx - e.clientX, dy = cy - e.clientY;
@@ -1117,8 +1137,8 @@
         } else {
           gsap.to(fd, { x: 0, y: 0, duration: 1.2, ease: "elastic.out(1,0.5)", overwrite: "auto" });
         }
-      }, { passive: true });
-    });
+      });
+    }, { passive: true });
   }
 
   /* ============ 1.25 动态装饰: 跟随鼠标小圆环 ============ */
