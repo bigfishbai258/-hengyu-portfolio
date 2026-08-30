@@ -806,6 +806,7 @@
       <p class="contact-sub">有项目、有合作，或者只是想聊聊设计，都欢迎来信。</p>
       <div class="contact-actions">
         <a class="btn magnet" href="mailto:3104221252@qq.com"><span class="magnet-label">3104221252@qq.com</span></a>
+        <a class="btn ghost" href="javascript:void(0)" onclick="copyWx(event)"><span class="magnet-label" id="wxLabel">微信 · yscw114514</span></a>
       </div>
     </div>
   </section>
@@ -1445,6 +1446,29 @@
       scrollTrigger: { trigger: t, start: "top 88%", once: true }
     });
   });
+
+  /* ============ 微信号一键复制 ============ */
+  window.copyWx = function(e){
+    if (e) e.preventDefault();
+    var wx = "yscw114514", lb = document.getElementById("wxLabel");
+    var flash = function(msg){
+      if (!lb) return;
+      var old = lb.textContent;
+      lb.textContent = msg;
+      setTimeout(function(){ lb.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(wx).then(function(){ flash("微信号已复制 ✓"); })
+        .catch(function(){ flash(wx); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = wx; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); flash("微信号已复制 ✓"); }
+      catch(err) { flash(wx); }
+      document.body.removeChild(ta);
+    }
+  };
 
   /* 供验证脚本使用的进度快照 */
   window.__progress = function(){
