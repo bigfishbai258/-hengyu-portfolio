@@ -184,57 +184,46 @@
 
   /* ============ 精选作品: 横向平移画廊 ============ */
   .works{padding:clamp(4rem,9vh,7rem) 0 0}
-  .works-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.2rem;margin-bottom:2.6rem}
+  .works-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.2rem;margin-bottom:3rem}
   .works-head .left .sec-sub{margin-bottom:.8rem}
   .works-head .right{text-align:right}
   .works-head .right .tag{display:block;margin-bottom:.35rem}
-  /* pin 期间触发区高度 = 100vh(一屏) + end 250vh 由 ScrollTrigger spacer 撑开 */
-  .pan{height:100vh;position:relative}
-  .pan-sticky{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;gap:2.2rem;overflow:clip}
-  .pan-track{
-    display:flex;gap:clamp(1.6rem,3vw,3rem);padding:0 clamp(1rem,5vw,6vw);
-    width:max-content;will-change:transform;transform:translate3d(0,0,0);
-    perspective:1200px;
-  }
-  .wcard{flex:0 0 auto;transform-style:preserve-3d}
-  .wcard-inner{transform:translateZ(0);display:flex;flex-direction:column;align-items:flex-start}
+  /* 纵向大图展示: 每件作品完整大图, 滚动自然浏览 */
+  .works-list{display:flex;flex-direction:column;gap:clamp(3.5rem,9vh,6rem)}
+  .wcard{width:min(1000px,100%);margin-inline:auto}
+  .wcard-inner{display:flex;flex-direction:column;gap:1.1rem}
   .art{
-    position:relative;height:clamp(280px,48vh,450px);width:auto;aspect-ratio:var(--r,4/5);flex:none;
+    position:relative;width:100%;aspect-ratio:var(--r,4/5);
+    display:flex;align-items:center;justify-content:center;
+    background:var(--paper2);border-radius:var(--r-card);
+    box-shadow:0 22px 55px -24px rgba(43,33,28,.32);
     overflow:hidden;
-    border-radius:var(--r-sm);
-    box-shadow:0 22px 55px -24px rgba(43,33,28,.38);
   }
-  .art::before{
-    content:"";position:absolute;z-index:1;width:58%;aspect-ratio:1;
-    filter:blur(1px);
-    transition:transform .8s var(--ease);
-  }
+  .art::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(120% 120% at 50% 40%,var(--paper),var(--paper2))}
   .art::after{
     content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
     background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-    opacity:.16;mix-blend-mode:multiply;
+    opacity:.12;mix-blend-mode:multiply;
   }
-  .wcard:hover .art::before{transform:scale(1.18) rotate(12deg)}
-  .wcard:hover .art{box-shadow:0 30px 70px -26px rgba(43,33,28,.38)}
-  /* hover 时标题 y 滑入 */
-  .wcap{padding:1.15rem .4rem 0;display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+  .art img{
+    position:relative;z-index:1;
+    width:auto;height:auto;max-width:100%;max-height:clamp(300px,62vh,620px);
+    object-fit:contain;transition:transform .8s var(--ease);
+  }
+  .wcard:hover .art img{transform:scale(1.02)}
+  .wcard:hover .art{box-shadow:0 30px 70px -26px rgba(43,33,28,.42)}
+  /* 标题行 */
+  .wcap{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:0 .2rem}
   .wcap h3{
-    font-family:var(--serif);font-weight:700;font-size:1.3rem;letter-spacing:.01em;
-    transform:translateY(8px);opacity:.8;
-    transition:transform .5s var(--ease),opacity .5s var(--ease);
+    font-family:var(--serif);font-weight:700;font-size:clamp(1.35rem,2.4vw,1.8rem);letter-spacing:.01em;
   }
-  .wcard:hover .wcap h3{transform:translateY(0);opacity:1}
   .wcap .meta{text-align:right;line-height:1.5}
   .wcap .year{font-family:var(--label);font-size:13px;letter-spacing:.14em;color:var(--accent-deep)}
-  .pan-progress{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(43,33,28,.1)}
-  .pan-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--accent),var(--amber));transform:scaleX(0);transform-origin:left}
-  /* 当前作品指示 0X / 06 */
-  .pan-count{
-    position:absolute;right:clamp(1.2rem,4vw,3rem);bottom:1.7rem;z-index:5;
-    font-family:var(--label);font-size:14px;letter-spacing:.2em;color:var(--ink-soft);
-    display:flex;align-items:baseline;gap:.4rem;pointer-events:none;
-  }
-  .pan-count b{font-size:1.7rem;color:var(--accent-deep);display:inline-block;min-width:2ch}
+  /* 多图缩略图行 */
+  .w-thumbs{display:flex;gap:.7rem;flex-wrap:wrap;padding:.2rem .2rem 0}
+  .w-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;cursor:pointer;opacity:.5;border:2px solid transparent;transition:all .3s var(--ease)}
+  .w-thumbs img:hover{opacity:.85}
+  .w-thumbs img.on{opacity:1;border-color:var(--accent)}
 
   /* 每件作品占位纹理: 高饱和有机渐变 + 噪点, 各不相同（视觉保真，不变） */
   .g1{background:radial-gradient(125% 95% at 25% 12%,var(--sun) 0%,var(--amber) 40%,var(--accent) 74%,#B93A12 100%)}
@@ -297,8 +286,8 @@
 
   /* 真实作品图: 覆盖占位纹理（保留噪点统一质感） */
   .art.art-photo::before{display:none}
-  .art-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .9s var(--ease)}
-  .wcard:hover .art-photo img{transform:scale(1.06)}
+  .art-photo img{position:relative;z-index:1;width:auto;height:auto;max-width:100%;max-height:clamp(300px,62vh,620px);object-fit:contain;transition:transform .8s var(--ease)}
+  .wcard:hover .art-photo img{transform:scale(1.02)}
 
   /* ============ 关于·信息格 / 技能墙 / 经历时间线 ============ */
   .about-info{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin:2.2rem 0 2.6rem}
@@ -391,17 +380,9 @@
     .hero{padding-top:5rem;min-height:auto}
     .hero-name{font-size:clamp(3.4rem,17vw,5.2rem)}
     .works{padding-top:4rem}
-    /* pin+横向pan 降级为普通纵向堆叠 + 横向 scroll-snap */
-    .pan{height:auto}
-    .pan-sticky{position:static;height:auto;padding:0 0 1.4rem}
-    .pan-track{
-      overflow-x:auto;scroll-snap-type:x mandatory;width:100%;
-      padding:0 6vw 1rem;scrollbar-width:thin;perspective:none;
-    }
-    .wcard{flex:0 0 78vw;scroll-snap-align:center}
-    .wcard .art{height:auto;width:100%;aspect-ratio:var(--r,4/5)}
-    .pan-progress{display:none}
-    .pan-count{display:none}
+    .wcard{width:100%}
+    .wcap{flex-direction:column;align-items:flex-start;gap:.3rem}
+    .wcap .meta{text-align:left}
     .works-head .right{text-align:left}
     .p-grid{grid-template-columns:1fr;gap:1.2rem}
     .pc1,.pc2,.pc3,.pc4{grid-column:1/-1;margin-top:0}
@@ -416,20 +397,7 @@
       animation-duration:.01ms !important;animation-iteration-count:1 !important;
       transition-duration:.01ms !important;
     }
-    /* 横向画廊摊平为纵向堆叠，保证内容完整可见 */
-    .pan{height:auto}
-    .pan-sticky{position:static;height:auto;padding:1rem 0 2rem}
-    .pan-track{flex-wrap:wrap;justify-content:center;width:100%;transform:none !important;gap:3rem 1.6rem}
-    .pan-progress{display:none}
-    .pan-count{display:none}
   }
-
-  /* 截图模式(?shot=1): 无头验证时把 pin 画廊摊平, 保证 full-page 截图完整 */
-  body[data-shot] .pan{height:auto}
-  body[data-shot] .pan-sticky{position:static;height:auto;padding:1rem 0 2rem}
-  body[data-shot] .pan-track{flex-wrap:wrap;justify-content:center;width:100%;transform:none !important;gap:3rem 1.6rem}
-  body[data-shot] .pan-progress{display:none}
-  body[data-shot] .pan-count{display:none}
 </style>
 </head>
 <body>
@@ -490,12 +458,10 @@
         <h2 class="sec-title">精选作品</h2>
       </div>
       <div class="right">
-        <span class="tag">11件作品 · 左右平移浏览</span>
+        <span class="tag">11件作品 · 滚轮浏览 · 点击放大</span>
       </div>
     </div>
-    <div class="pan" id="pan">
-      <div class="pan-sticky">
-        <div class="pan-track" id="panTrack">
+    <div class="works-list">
           <figure class="wcard" data-tilt style="--r:0.71" data-imgs="images/work01-florasis-a.webp,images/work01-florasis-b.webp" tabindex="0" aria-label="花西子男士系列海报，点击查看全部图片">
             <div class="wcard-inner">
               <div class="art art-photo"><img src="images/work01-florasis-a.webp" alt="花西子男士系列海报"></div>
@@ -595,11 +561,7 @@
               </figcaption>
             </div>
           </figure>
-        </div>
-        <div class="pan-count" aria-hidden="true"><b id="panCount">01</b><span>/ 11</span></div>
-        <div class="pan-progress" aria-hidden="true"><i id="panProgress"></i></div>
       </div>
-    </div>
   </section>
 
   <!-- ============ 能力 ============ -->
@@ -915,71 +877,49 @@
     xPercent: -50, duration: 10, ease: "sine.inOut", yoyo: true, repeat: -1
   });
 
-  /* ============ 1.3 作品区: pin + 横向 pan + 卡片窗帘揭示 + 进度 ============ */
-  var pan = qs("#pan"), track = qs("#panTrack"), sticky = qs(".pan-sticky");
+  /* ============ 1.3 作品区: 纵向大图 + 多图缩略图切换 + 入场 reveal ============ */
   var cards = qsa(".wcard");
-  var counter = qs("#panCount"), bar = qs("#panProgress");
-  if (pan && track && sticky && desktop) {
-    var shift = function(){ return Math.max(0, track.scrollWidth - sticky.clientWidth); };
-    window.__panShift = shift;
-    window.__panX = function(){ return Math.round(gsap.getProperty(track, "x")); };
-
-    var tlPan = gsap.timeline({
-      defaults: { ease: "none" },
-      scrollTrigger: {
-        trigger: pan,
-        start: "top top",
-        end: function(){ return "+=" + window.innerHeight * 2.5; },   /* 竖向滚动 ~250vh */
-        scrub: 1,
-        pin: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onUpdate: function(self){
-          var p = self.progress;
-          if (bar) bar.style.transform = "scaleX(" + p + ")";
-          var idx = Math.round(p * (cards.length - 1)) + 1;
-          if (counter && idx !== counter._last) {
-            counter._last = idx;
-            counter.textContent = ("0" + idx).slice(-2);
-            gsap.fromTo(counter, { yPercent: 26, opacity: 0 }, {
-              yPercent: 0, opacity: 1, duration: .4, ease: "power3.out", overwrite: "auto"
-            });
-          }
-        }
-      }
-    });
-    /* 整条作品墙 x 平移（none + scrub 1 跟手） */
-    tlPan.to(track, {
-      x: function(){ return -shift(); },
-      duration: 1 + (cards.length - 1) * 0.18,
-      ease: "none"
-    }, 0);
-    /* 卡片逐个 clip-path 窗帘揭示 + 轻微回正（stagger .18, scrub 联动） */
-    cards.forEach(function(card, i){
-      var art = card.querySelector(".art");
-      if (!art) return;
-      tlPan.fromTo(art, { clipPath: "inset(0 0 100% 0)", rotate: -3 }, {
-        clipPath: "inset(0 0 0% 0)", rotate: 0, duration: 1, ease: "power3.out"
-      }, i * 0.18);
-    });
-
-    /* 卡片 hover: 磁吸 3D 倾斜（quickTo 最大 8deg）+ elastic 回弹 */
-    if (fine) {
-      cards.forEach(function(card){
-        var rx = gsap.quickTo(card, "rotationX", { duration: .5, ease: "power3.out" });
-        var ry = gsap.quickTo(card, "rotationY", { duration: .5, ease: "power3.out" });
-        var ty = gsap.quickTo(card, "y", { duration: .5, ease: "power3.out" });
-        card.addEventListener("pointermove", function(e){
-          var r = card.getBoundingClientRect();
-          var px = (e.clientX - r.left) / r.width - .5;
-          var py = (e.clientY - r.top) / r.height - .5;
-          rx(-py * 8); ry(px * 8); ty(-8);
-        });
-        card.addEventListener("pointerleave", function(){
-          gsap.to(card, { rotationX: 0, rotationY: 0, y: 0, duration: .9, ease: "elastic.out(1,0.6)", overwrite: "auto" });
-        });
+  /* 多图作品: 生成缩略图行, 点击切换大图 */
+  cards.forEach(function(card){
+    var imgs = (card.getAttribute("data-imgs") || "").split(",").filter(Boolean);
+    if (imgs.length < 2) return;
+    var art = card.querySelector(".art"), mainImg = card.querySelector(".art img");
+    if (!art || !mainImg) return;
+    var row = document.createElement("div");
+    row.className = "w-thumbs";
+    imgs.forEach(function(src, i){
+      var t = document.createElement("img");
+      t.src = src; t.alt = "查看图 " + (i + 1);
+      if (i === 0) t.className = "on";
+      t.addEventListener("click", function(){
+        mainImg.style.opacity = 0;
+        mainImg.onload = function(){ gsap.to(mainImg, { opacity: 1, duration: .45, ease: "power2.out" }); };
+        mainImg.src = src;
+        row.querySelectorAll("img").forEach(function(x){ x.classList.remove("on"); });
+        t.classList.add("on");
       });
-    }
+      row.appendChild(t);
+    });
+    card.querySelector(".wcard-inner").appendChild(row);
+  });
+  /* 入场: 卡片逐个上浮揭示（stagger, huashu 缓动） */
+  qsa(".wcard").forEach(function(c, i){
+    gsap.fromTo(c, { y: 56, opacity: 0 }, {
+      y: 0, opacity: 1, duration: 1.1, ease: "huashu", delay: (i % 3) * .09,
+      scrollTrigger: { trigger: c, start: "top 88%", once: true },
+      onComplete: function(){ gsap.set(c, { clearProps: "transform" }); }
+    });
+  });
+  /* hover: 大图轻微浮起（不做3D倾斜, 保持作品完整感） */
+  if (fine) {
+    cards.forEach(function(card){
+      card.addEventListener("pointerenter", function(){
+        gsap.to(card, { y: -6, duration: .5, ease: "huashu", overwrite: "auto" });
+      });
+      card.addEventListener("pointerleave", function(){
+        gsap.to(card, { y: 0, duration: .7, ease: "huashu", overwrite: "auto" });
+      });
+    });
   }
 
   /* ============ 1.5 ABOUT: 按行 mask reveal + 滚动视差 ============ */
