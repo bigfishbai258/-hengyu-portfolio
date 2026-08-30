@@ -482,7 +482,9 @@
     }
     .hero{padding-top:5rem;min-height:auto}
     .hero-name{font-size:clamp(3.4rem,17vw,5.2rem)}
-    .float-deco,.follow-ring{display:none}
+    .follow-ring{display:none}
+    .float-deco{display:block;opacity:1}
+    .fd .fd-shape{opacity:.55}
     .works{padding-top:4rem}
     .wcard,.wcard:nth-child(odd),.wcard:nth-child(even){width:100%;margin:0 !important;flex:none}
     .works-list{gap:2rem}
@@ -1090,28 +1092,30 @@
     });
   }
 
-  /* ============ 1.23b 漂浮几何: 网格均匀分布(10行×6列+抖动) ============ */
+  /* ============ 1.23b 漂浮几何: 网格均匀分布(10行×6列+抖动; 手机36个更小更淡) ============ */
   var fdBox = qs(".float-deco");
   if (fdBox) {
     var FD_SHAPES = ["fd-ring", "fd-dot", "fd-cross", "fd-square", "fd-tri"];
-    var FD_ROWS = 10, FD_COLS = 6;
-    for (var fi = 0; fi < FD_ROWS * FD_COLS; fi++) {
+    var FD_mob = window.matchMedia("(max-width: 860px)").matches;
+    var FD_N = FD_mob ? 36 : 60;
+    var FD_ROWS = FD_mob ? 6 : 10, FD_COLS = 6;
+    for (var fi = 0; fi < FD_N; fi++) {
+      var row = Math.floor(fi / FD_COLS), col = fi % FD_COLS;
       var fw = document.createElement("div");
       fw.className = "fd";
       var fsh = document.createElement("i");
       fsh.className = "fd-shape " + FD_SHAPES[Math.floor(Math.random() * FD_SHAPES.length)];
       fw.appendChild(fsh);
-      /* 网格坐标 + 抖动: 行均匀铺满页面, 列左右错落 */
-      var row = Math.floor(fi / FD_COLS), col = fi % FD_COLS;
-      var topPct = (row + .5) / FD_ROWS * 94 + (Math.random() - .5) * 5;
-      var sidePct = 2 + (col % 3) * 5.5 + (Math.random() - .5) * 3;   /* 2/7.5/13% 三档 */
-      fw.style.top = Math.max(1.5, Math.min(96, topPct)) + "%";
-      if (col < 3) fw.style.left = Math.max(.8, sidePct) + "%";
-      else fw.style.right = Math.max(.8, sidePct) + "%";
-      /* 随机大小 0.8-2.0 */
-      fw.style.transform = "scale(" + (.8 + Math.random() * 1.2).toFixed(2) + ")";
+      /* 网格+抖动: 均匀分布, 左右三档错落 */
+      var topPct = (row + .5) / FD_ROWS * 92 + (Math.random() - .5) * 5;
+      fw.style.top = Math.max(2, Math.min(96, topPct)) + "%";
+      if (col % 2 === 0) fw.style.left = (2 + (col / 2) * 5 + Math.random() * 1.6) + "%";
+      else fw.style.right = (2 + ((col - 1) / 2) * 5 + Math.random() * 1.6) + "%";
+      /* 随机大小: 手机更小 */
+      var fsc = FD_mob ? (.4 + Math.random() * .8) : (.8 + Math.random() * 1.2);
+      fw.style.transform = "scale(" + fsc + ")";
       /* 随机动画延迟与周期 */
-      fsh.style.animationDelay = (-Math.random() * 8) + "s";
+      fsh.style.animationDelay = (-Math.random() * 13) + "s";
       fsh.style.animationDuration = (5 + Math.random() * 5) + "s";
       fdBox.appendChild(fw);
     }
