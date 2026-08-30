@@ -1030,7 +1030,7 @@
   if (!reduce) {
     /* 全页背景色块: 滚动时上下漂移(交替方向, 不同深度) */
     qsa(".bbw").forEach(function(b, i){
-      var dir = (i % 2 === 0 ? 1 : -1) * (70 + i * 28);
+      var dir = (i % 2 === 0 ? 1 : -1) * (140 + i * 55);
       gsap.to(b, {
         y: dir, ease: "none",
         scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true }
@@ -1038,7 +1038,7 @@
     });
     /* 作品区背景色块: 随作品区滚动漂移 */
     qsa(".works-bg .ww").forEach(function(b, i){
-      var dir = (i % 2 === 0 ? 1 : -1) * (85 + i * 32);
+      var dir = (i % 2 === 0 ? 1 : -1) * (160 + i * 60);
       gsap.to(b, {
         y: dir, ease: "none",
         scrollTrigger: { trigger: ".works", start: "top bottom", end: "bottom top", scrub: 1.2, invalidateOnRefresh: true }
@@ -1046,7 +1046,7 @@
     });
     /* 漂浮几何元素: 滚动时缩放呼吸(进度驱动) */
     qsa(".fd").forEach(function(fd, i){
-      var s1 = .55 + (i % 3) * .15, s2 = 1.25 + (i % 2) * .22;
+      var s1 = .4 + (i % 3) * .15, s2 = 1.6 + (i % 2) * .3;
       gsap.fromTo(fd, { scale: s1 }, {
         scale: s2, ease: "none",
         scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.4, invalidateOnRefresh: true }
