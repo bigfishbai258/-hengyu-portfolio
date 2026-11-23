@@ -1,0 +1,17 @@
+﻿ZHANG HENGYU · DESIGN PORTFOLIO
+FILE X-020 / 星期天的逃逸
+SUNDAY ESCAPE / AI FILM
+
+设计工具：DeepSeek / Seedream 5.0 / Seedance 2.0
+项目信息：个人设计作品集
+创作者：张恒瑀 · 项目负责人
+项目类型：DESIGN PORTFOLIO
+
+DeepSeek 负责剧本与提示词优化，Seedream / Seedance 完成生图与视频生成。
+
+研究记录
+1. 个人职责：作为项目负责人统筹剧情、分镜与 AI 产出审核。
+2. 问题解决：以“人物随镜头同步缩放 + 参照物锚定”解决比例失衡；以反画风词规避吉卜力画风混入，保证画面统一。
+
+原作品集：portfolio.pdf#page=25
+作品与说明来自张恒瑀个人作品集。
