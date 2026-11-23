@@ -1,6 +1,6 @@
 /* The build replaces both tokens; this file is never registered in development. */
-const VERSION = "b0dee3ee7d7cb0e8";
-const FILES = ["assets/index-BI6Iehev.css","assets/index-BTy7PTe9.js","favicon.svg","icons/app-icon.svg","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","index.html","manifest.webmanifest"];
+const VERSION = "8bd746a587da6e8a";
+const FILES = ["assets/index-BG_ARuje.css","assets/index-vOEhphx8.js","favicon.svg","icons/app-icon.svg","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","index.html","manifest.webmanifest"];
 const SCOPE = self.registration.scope;
 const PREFIX = `rhine-lab:${new URL(SCOPE).pathname}:`;
 const CACHE = PREFIX + VERSION;
@@ -41,6 +41,7 @@ self.addEventListener("install", (event) => {
         const results = await Promise.allSettled(workers);
         const failure = results.find((result) => result.status === "rejected");
         if (failure) throw failure.reason;
+        await self.skipWaiting();
       } catch (error) {
         await caches.delete(CACHE);
         throw error;
@@ -79,20 +80,46 @@ self.addEventListener("fetch", (event) => {
   const runtime = !precached && isRuntimeCacheable(key);
   if (!precached && !runtime) return;
 
+  if (navigation) {
+    // Network-first for HTML navigations so mobile refreshes immediately receive
+    // new deployments instead of staying stuck on an older cached release.
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE);
+        try {
+          const fresh = await fetch(new Request(SCOPE, { cache: "no-cache" }));
+          if (fresh.ok && fresh.status === 200) {
+            event.waitUntil(cache.put(index, fresh.clone()).catch(() => {}));
+            return fresh.redirected
+              ? new Response(fresh.body, {
+                  status: fresh.status,
+                  statusText: fresh.statusText,
+                  headers: fresh.headers,
+                })
+              : fresh;
+          }
+        } catch {}
+        const cached = await cache.match(index);
+        if (cached) {
+          return cached.redirected
+            ? new Response(cached.body, {
+                status: cached.status,
+                statusText: cached.statusText,
+                headers: cached.headers,
+              })
+            : cached;
+        }
+        return fetch(event.request);
+      })(),
+    );
+    return;
+  }
+
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
       const cached = await cache.match(key);
-      if (cached) {
-        if (navigation && cached.redirected) {
-          return new Response(cached.body, {
-            status: cached.status,
-            statusText: cached.statusText,
-            headers: cached.headers,
-          });
-        }
-        return cached;
-      }
+      if (cached) return cached;
       const response = await fetch(event.request);
       if (response.ok && response.status === 200 && response.type === "basic") {
         event.waitUntil(cache.put(key, response.clone()).catch(() => {}));
