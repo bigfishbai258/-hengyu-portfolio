@@ -53,8 +53,10 @@ export function resizeQuality(
   );
   renderer.setPixelRatio(dimensions.ratio);
   renderer.setSize(width, height);
-  composer.setPixelRatio(dimensions.ratio);
-  composer.setSize(width, height);
+  if (!superPerformance) {
+    composer.setPixelRatio(dimensions.ratio);
+    composer.setSize(width, height);
+  }
   renderer.transmissionResolutionScale = quality.transmission;
   host.dataset.renderQuality = JSON.stringify({
     ...dimensions,

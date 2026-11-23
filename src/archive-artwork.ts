@@ -3,68 +3,126 @@ import { records } from './data';
 import { assetUrl } from './asset-url';
 import { fileAtCell, type ArchiveCell } from './archive-loop';
 
+export type ArtworkLoadOptions = {
+  compact?: boolean;
+  onUpdate?: () => void;
+};
+
 // A printed insert attached to the front of the original cassette. Shared atlas
 // keeps the full moving archive array to one additional draw call.
 export class ArchiveArtwork {
   private readonly columns = 4;
   private readonly rows = Math.ceil(records.length / this.columns);
-  private readonly width = 768;
-  private readonly height = 448;
+  private cellWidth = 768;
+  private cellHeight = 448;
   private texture?: THREE.CanvasTexture;
   private geometries: THREE.PlaneGeometry[] = [];
   private indices?: THREE.InstancedBufferAttribute;
   private array?: THREE.InstancedMesh;
   private printedMaterial?: THREE.MeshPhysicalMaterial;
   private imageCache = new Map<string, Promise<HTMLImageElement>>();
+  private disposed = false;
 
-  async load(anisotropy: number) {
+  async load(anisotropy: number, options: ArtworkLoadOptions = {}) {
+    const compact = options.compact === true;
+    this.disposed = false;
+    this.cellWidth = compact ? 384 : 768;
+    this.cellHeight = compact ? 224 : 448;
+    const scaleFactor = this.cellWidth / 768;
     const canvas = document.createElement('canvas');
-    canvas.width = this.columns * this.width;
-    canvas.height = this.rows * this.height;
+    canvas.width = this.columns * this.cellWidth;
+    canvas.height = this.rows * this.cellHeight;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#e9e5dd'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await Promise.all(records.map(async (record, index) => {
-      const images = await Promise.all(record.images.slice(0, 1).map(image => {
-        let request = this.imageCache.get(image.src);
-        if (!request) {
-          request = new Promise<HTMLImageElement>((resolve, reject) => {
-            const img = new Image(); img.onload = () => resolve(img); img.onerror = reject;
-            img.src = assetUrl(image.src);
-          });
-          this.imageCache.set(image.src, request);
-        }
-        return request;
-      }));
-      const x = index % this.columns * this.width, y = Math.floor(index / this.columns) * this.height;
-      ctx.fillStyle = '#ece8df'; ctx.fillRect(x, y, this.width, this.height);
-      if (images.length) {
-        const gutter = 18, slot = (this.width - gutter * (images.length + 1)) / images.length;
-        images.forEach((img, i) => {
-          const scale = Math.min(slot / img.width, (this.height - 36) / img.height);
-          const w = img.width * scale, h = img.height * scale;
-          ctx.drawImage(img, x + gutter + i * (slot + gutter) + (slot - w) / 2, y + (this.height - h) / 2, w, h);
-        });
+    ctx.fillStyle = '#e9e5dd';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const pending: { index: number; src: string }[] = [];
+    records.forEach((record, index) => {
+      const x = (index % this.columns) * this.cellWidth;
+      const y = Math.floor(index / this.columns) * this.cellHeight;
+      ctx.fillStyle = '#ece8df';
+      ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+      const firstImage = record.images[0];
+      if (firstImage) {
+        pending.push({ index, src: firstImage.src });
       } else {
-        ctx.fillStyle = '#22251f'; ctx.font = '600 64px MiSans, sans-serif';
-        ctx.fillText('张恒瑀', x + 55, y + 170);
-        ctx.font = '24px MiSans, sans-serif';
-        ctx.fillText('VISUAL COMMUNICATION / DESIGN PORTFOLIO', x + 55, y + 230);
-        ctx.fillText('3104221252@qq.com', x + 55, y + 315);
+        ctx.fillStyle = '#22251f';
+        ctx.font = `600 ${Math.round(64 * scaleFactor)}px MiSans, sans-serif`;
+        ctx.fillText('张恒瑀', x + 55 * scaleFactor, y + 170 * scaleFactor);
+        ctx.font = `${Math.round(24 * scaleFactor)}px MiSans, sans-serif`;
+        ctx.fillText('VISUAL COMMUNICATION / DESIGN PORTFOLIO', x + 55 * scaleFactor, y + 230 * scaleFactor);
+        ctx.fillText('3104221252@qq.com', x + 55 * scaleFactor, y + 315 * scaleFactor);
       }
-    }));
+    });
+
     this.texture = new THREE.CanvasTexture(canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
     this.texture.anisotropy = anisotropy;
-    this.printedMaterial = new THREE.MeshPhysicalMaterial({map: this.texture, roughness: .72, metalness: 0, clearcoat: .15, clearcoatRoughness: .45, envMapIntensity: .3});
+    this.printedMaterial = new THREE.MeshPhysicalMaterial({
+      map: this.texture,
+      roughness: compact ? 0.78 : 0.72,
+      metalness: 0,
+      clearcoat: compact ? 0 : 0.15,
+      clearcoatRoughness: 0.45,
+      envMapIntensity: 0.3,
+    });
     this.printedMaterial.name = 'Portfolio_Print';
     this.geometries = records.map((_, index) => {
-      const geometry = this.plane(); const uv = geometry.getAttribute('uv');
+      const geometry = this.plane();
+      const uv = geometry.getAttribute('uv');
       for (let i = 0; i < uv.count; i++) {
-        uv.setXY(i, (index % this.columns + uv.getX(i)) / this.columns,
-          (this.rows - 1 - Math.floor(index / this.columns) + uv.getY(i)) / this.rows);
+        uv.setXY(
+          i,
+          ((index % this.columns) + uv.getX(i)) / this.columns,
+          (this.rows - 1 - Math.floor(index / this.columns) + uv.getY(i)) / this.rows,
+        );
       }
       return geometry;
     });
+
+    // Stream cassette cover thumbnails progressively after scene entry is unblocked,
+    // prioritizing record 0 so the active cassette artwork appears first.
+    const loadImage = (src: string) => {
+      let request = this.imageCache.get(src);
+      if (!request) {
+        request = new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = assetUrl(src);
+        });
+        this.imageCache.set(src, request);
+      }
+      return request;
+    };
+
+    const concurrency = compact ? 2 : 4;
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < pending.length && !this.disposed) {
+        const item = pending[cursor++];
+        try {
+          const img = await loadImage(item.src);
+          if (this.disposed || !this.texture) return;
+          const x = (item.index % this.columns) * this.cellWidth;
+          const y = Math.floor(item.index / this.columns) * this.cellHeight;
+          const gutter = Math.round(18 * scaleFactor);
+          const slot = this.cellWidth - gutter * 2;
+          const scale = Math.min(slot / img.width, (this.cellHeight - gutter * 2) / img.height);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          ctx.fillStyle = '#ece8df';
+          ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+          ctx.drawImage(img, x + gutter + (slot - w) / 2, y + (this.cellHeight - h) / 2, w, h);
+          this.texture.needsUpdate = true;
+          options.onUpdate?.();
+        } catch {
+          // Keep the warm matte tile if an individual thumbnail fails to decode.
+        }
+      }
+    };
+    void Promise.all(Array.from({ length: concurrency }, worker));
   }
   private plane() { return new THREE.PlaneGeometry(4.05, 2.36).translate(0, 1.53, .259); }
   createMesh(index: number, independentGeometry = false) {
@@ -100,5 +158,10 @@ export class ArchiveArtwork {
     if (changed) this.indices.needsUpdate = true;
     this.array.count = cells.length;
   }
-  dispose() { this.texture?.dispose(); this.printedMaterial?.dispose(); this.geometries.forEach(g => g.dispose()); }
+  dispose() {
+    this.disposed = true;
+    this.texture?.dispose();
+    this.printedMaterial?.dispose();
+    this.geometries.forEach(g => g.dispose());
+  }
 }

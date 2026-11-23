@@ -99,9 +99,8 @@ export class ArchiveScene {
   private subduedIndex = { value: 0 };
   private selectedIndexOnly = false;
   private superPerformance = false;
-  setSuperPerformance(enabled: boolean) {
-    if (this.superPerformance === enabled) return;
-    this.superPerformance = enabled;
+  private applySuperPerformanceMaterials() {
+    const enabled = this.superPerformance;
     for (const inst of this.instances) {
       const original = (inst.userData.fullMaterial ??= inst.material) as THREE.MeshPhysicalMaterial;
       if (enabled && !inst.userData.fastMaterial) {
@@ -115,6 +114,15 @@ export class ArchiveScene {
       }
       inst.material = enabled ? inst.userData.fastMaterial : original;
       inst.visible = !enabled || original.name.replace(/\.\d+$/, "") !== "Titanium_Fasteners";
+    }
+  }
+  setSuperPerformance(enabled: boolean) {
+    if (this.superPerformance === enabled) return;
+    this.superPerformance = enabled;
+    this.applySuperPerformanceMaterials();
+    if (enabled) {
+      this.composer.setSize(1, 1);
+      this.ao.setSize(1, 1);
     }
     this.resize();
   }
@@ -259,19 +267,23 @@ export class ArchiveScene {
     private readonly selectionPulse = baselineSelectionWave,
     private readonly deferSelectionPulse = false,
     private readonly lightingLook: LightingLook = "baseline",
+    initialSuperPerformance = false,
   ) {
+    this.superPerformance = initialSuperPerformance;
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: false,
       powerPreference: "high-performance",
     });
     this.renderer.setPixelRatio(
-      Math.min(devicePixelRatio, 1.5) *
-        Math.min(innerWidth / 1920, innerHeight / 1080),
+      initialSuperPerformance
+        ? 1
+        : Math.min(devicePixelRatio, 1.5) *
+            Math.min(innerWidth / 1920, innerHeight / 1080),
     );
     this.renderer.setSize(container.clientWidth, container.clientHeight);
     this.renderer.info.autoReset = false;
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = !initialSuperPerformance;
     // All composer passes see the same geometry within one application frame.
     // Generate the shadow map in the beauty pass and reuse it in depth/normal passes.
     this.renderer.shadowMap.autoUpdate = false;
@@ -302,7 +314,10 @@ export class ArchiveScene {
       near: 0.1,
       far: 45,
     });
-    this.light.shadow.mapSize.set(2048, 2048);
+    this.light.shadow.mapSize.set(
+      initialSuperPerformance ? 1024 : 2048,
+      initialSuperPerformance ? 1024 : 2048,
+    );
     this.light.shadow.normalBias = lightingLook === "refined" ? 0.018 : 0.035;
     this.light.shadow.bias = lightingLook === "refined" ? -0.00012 : -0.0003;
     this.light.shadow.radius = 4;
@@ -324,22 +339,28 @@ export class ArchiveScene {
     this.ao = new SharedDepthAO(
       this.scene,
       this.camera,
-      container.clientWidth,
-      container.clientHeight,
+      initialSuperPerformance ? 1 : container.clientWidth,
+      initialSuperPerformance ? 1 : container.clientHeight,
     );
     this.ao.kernelRadius = lightingLook === "refined" ? 0.44 : 0.38;
     this.ao.minDistance = 0.001;
     this.ao.maxDistance = 0.09;
+    this.ao.enabled = !initialSuperPerformance;
     this.composer.addPass(this.ao);
     this.bokeh = new SharedDepthBokeh(this.scene, this.camera, {
       focus: 25,
       aperture: 0.0018,
       maxblur: 0.011,
     }, () => this.ao);
+    this.bokeh.enabled = !initialSuperPerformance;
     this.composer.addPass(this.bokeh);
     this.smaa.enabled = false;
     this.composer.addPass(this.smaa);
     this.composer.addPass(new OutputPass());
+    if (initialSuperPerformance) {
+      this.composer.setSize(1, 1);
+      this.ao.setSize(1, 1);
+    }
     this.bindPointer();
   }
   async load(assetUrl = publicAsset("assets/archive-cassette.glb")) {
@@ -483,7 +504,17 @@ export class ArchiveScene {
     }
     this.shadowCoverage = new ArchiveShadowCoverage(this.instances.find(mesh => mesh.castShadow)!);
     this.scene.add(this.shadowCoverage.mesh);
-    await this.artwork.load(this.renderer.capabilities.getMaxAnisotropy());
+    if (this.superPerformance) this.applySuperPerformanceMaterials();
+    await this.artwork.load(
+      Math.min(
+        this.superPerformance ? 2 : this.renderer.capabilities.getMaxAnisotropy(),
+        this.renderer.capabilities.getMaxAnisotropy(),
+      ),
+      {
+        compact: this.superPerformance,
+        onUpdate: () => this.renderState.invalidate(),
+      },
+    );
     this.artworkMesh = this.artwork.createMesh(0);
     this.model.add(this.artworkMesh);
     this.scene.add(this.artwork.createArray(this.instances[0].instanceMatrix));
@@ -665,12 +696,18 @@ export class ArchiveScene {
       quality.shadows || 1024,
       this.renderer.capabilities.maxTextureSize,
     );
-    if (this.light.shadow.mapSize.x !== size) {
+    if (!this.renderer.shadowMap.enabled) {
+      this.light.shadow.map?.dispose();
+      this.light.shadow.map = null;
+      this.light.shadow.needsUpdate = false;
+    } else if (this.light.shadow.mapSize.x !== size) {
       this.light.shadow.map?.dispose();
       this.light.shadow.map = null;
       this.light.shadow.mapSize.set(size, size);
+      this.light.shadow.needsUpdate = true;
+    } else {
+      this.light.shadow.needsUpdate = true;
     }
-    this.light.shadow.needsUpdate = true;
     applyTextureQuality(this.scene, this.renderer, quality);
     this.resize();
   }
@@ -855,10 +892,12 @@ export class ArchiveScene {
       this.quality,
       this.superPerformance,
     );
-    this.ao.setSize(
-      Math.max(1, Math.floor(dimensions.width * this.quality.aoResolution)),
-      Math.max(1, Math.floor(dimensions.height * this.quality.aoResolution)),
-    );
+    if (this.ao.enabled && !this.superPerformance) {
+      this.ao.setSize(
+        Math.max(1, Math.floor(dimensions.width * this.quality.aoResolution)),
+        Math.max(1, Math.floor(dimensions.height * this.quality.aoResolution)),
+      );
+    }
     this.ao.setSharing(this.ao.enabled && this.bokeh.enabled && this.quality.aoResolution === 1 && !this.superPerformance);
     this.container.dataset.renderQuality = JSON.stringify({
       ...JSON.parse(this.container.dataset.renderQuality!),

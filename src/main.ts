@@ -7,13 +7,18 @@ import "./document-decryption.css";
 import "./decryption.css";
 import { escapeHtml } from "./html";
 import {
+  matchingPreset,
   normalizeQuality,
   qualityPresets,
   type QualityPreset,
   type RenderQuality,
 } from "./render-quality";
 import { qualityMarkup, syncQualityUI } from "./quality-settings";
-import { superPerformanceQuality, wallpaperQuality } from "./wallpaper-quality";
+import {
+  mobileSuperPerformanceQuality,
+  superPerformanceQuality,
+  wallpaperQuality,
+} from "./wallpaper-quality";
 import "@kitlangton/rolling-number/styles.css";
 import "./style.css";
 import "./quality-settings.css";
@@ -189,11 +194,23 @@ const storedPrefs = readLocal<
     quality: boolean;
     rendering: RenderQuality;
     superPerformance: boolean;
+    qualityCustomized: boolean;
     colorTheme: "light" | "dark";
     motion: StoredMotion;
     motionPreset: MotionPreset;
   }>
 >("zhy-rhine-settings", {});
+const isMobileDevice =
+  !isWallpaper &&
+  (matchMedia("(pointer: coarse)").matches ||
+    Math.min(window.innerWidth, window.innerHeight) < 768 ||
+    /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent));
+const hasCustomQuality =
+  storedPrefs.qualityCustomized === true ||
+  storedPrefs.superPerformance === true ||
+  (storedPrefs.rendering !== undefined &&
+    matchingPreset(normalizeQuality(storedPrefs.rendering)) !== "original");
+const defaultMobilePerformance = isMobileDevice && !hasCustomQuality;
 const initialMotion = createMotionPreferences(
   storedPrefs.motion,
   storedPrefs.reduced ??
@@ -209,12 +226,14 @@ const prefs = {
   musicVolume: storedPrefs.musicVolume ?? 0.5,
   motion: initialMotion,
   motionPreset: initialMotionPreset,
-  quality: storedPrefs.quality ?? true,
-  superPerformance: storedPrefs.superPerformance ?? false,
-  rendering: normalizeQuality(
-    storedPrefs.rendering,
-    storedPrefs.quality !== false,
-  ),
+  quality: defaultMobilePerformance ? false : (storedPrefs.quality ?? true),
+  superPerformance: defaultMobilePerformance
+    ? true
+    : (storedPrefs.superPerformance ?? false),
+  qualityCustomized: hasCustomQuality,
+  rendering: defaultMobilePerformance
+    ? { ...qualityPresets.performance }
+    : normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
   colorTheme: storedPrefs.colorTheme === "dark" ? "dark" : "light",
 };
 const motionActive = (key: MotionKey) => motionEnabled(prefs.motion, key);
@@ -308,7 +327,8 @@ const entry =
     : undefined;
 if (entry) {
   audio.holdForEntry();
-  if (prefs.music)
+  // On mobile, let the 3D archive model take full bandwidth first; warm music once entry is ready.
+  if (prefs.music && !isMobileDevice)
     void audio.prepareMusic().catch(() => {
       /* Entry offers retry. */
     });
@@ -340,7 +360,11 @@ function superPerformanceEnabled() {
     : prefs.superPerformance;
 }
 function effectiveRenderQuality() {
-  return superPerformanceEnabled() ? superPerformanceQuality : prefs.rendering;
+  return superPerformanceEnabled()
+    ? isMobileDevice
+      ? mobileSuperPerformanceQuality
+      : superPerformanceQuality
+    : prefs.rendering;
 }
 function savePrefs() {
   saveAudioPrefs();
@@ -861,7 +885,7 @@ function motionPreferenceNoteMarkup() {
   return `<div id="motion-preference-note" class="motion-preference-note"><p>${motionSummary(prefs.motion)}</p><span>预设：${preset === "full" ? "完整动画" : preset === "reduced" ? "减少动画" : "自定义"} · 选择会保存在本站</span>${allEnabled ? "" : '<button data-action="enable-motion">启用完整动画并重播 ↻</button>'}</div>`;
 }
 function settingsMarkup() {
-  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">ZHANG HENGYU <span>·</span> PORTFOLIO ONLINE</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark")}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；关闭后恢复原画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}</div>${motionPreferenceNoteMarkup()}${motionSettingsMarkup(prefs.motion, prefs.motionPreset)}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? "<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>" : "<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取 <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回</p>"}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ""}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>DESIGN OS / 1.0 · 基于 <a href="https://github.com/LBEILC/RhineLabUI" target="_blank" rel="noopener">RhineLabUI</a> · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>DESIGNED BY ZHY DESIGN</span></div>`;
+  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">ZHANG HENGYU <span>·</span> PORTFOLIO ONLINE</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark")}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；手机端默认开启以加速加载，关闭后恢复自定义画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}</div>${motionPreferenceNoteMarkup()}${motionSettingsMarkup(prefs.motion, prefs.motionPreset)}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? "<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>" : "<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取 <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回</p>"}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ""}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>DESIGN OS / 1.0 · 基于 <a href="https://github.com/LBEILC/RhineLabUI" target="_blank" rel="noopener">RhineLabUI</a> · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>DESIGNED BY ZHY DESIGN</span></div>`;
 }
 
 document.addEventListener("input", (e) => {
@@ -893,6 +917,12 @@ document.addEventListener("change", (e) => {
   const el = e.target as HTMLInputElement;
   if (el.id === "quality-preset" && Object.hasOwn(qualityPresets, el.value)) {
     prefs.rendering = { ...qualityPresets[el.value as QualityPreset] };
+    prefs.qualityCustomized = true;
+    if (!isWallpaper && prefs.superPerformance) {
+      prefs.superPerformance = false;
+      const sp = document.querySelector<HTMLInputElement>('[data-pref="superPerformance"]');
+      if (sp) sp.checked = false;
+    }
     savePrefs();
   } else if (el.dataset.quality) {
     const key = el.dataset.quality as keyof RenderQuality;
@@ -900,6 +930,12 @@ document.addEventListener("change", (e) => {
       ...prefs.rendering,
       [key]: key === "antialias" ? el.value : Number(el.value),
     });
+    prefs.qualityCustomized = true;
+    if (!isWallpaper && prefs.superPerformance) {
+      prefs.superPerformance = false;
+      const sp = document.querySelector<HTMLInputElement>('[data-pref="superPerformance"]');
+      if (sp) sp.checked = false;
+    }
     savePrefs();
   }
   if (el.dataset.pref) {
@@ -909,8 +945,11 @@ document.addEventListener("change", (e) => {
       key === "music" ||
       key === "quality" ||
       key === "superPerformance"
-    )
+    ) {
       prefs[key] = el.checked;
+      if (key === "quality" || key === "superPerformance")
+        prefs.qualityCustomized = true;
+    }
     if (key === "sound" || key === "music") saveAudioPrefs();
     else savePrefs();
     audio.play("confirm");
@@ -1449,7 +1488,13 @@ async function toggleThree() {
   syncThreeButton();
   let next: ArchiveScene | undefined;
   try {
-    next = new ArchiveScene($("#three-scene"));
+    next = new ArchiveScene(
+      $("#three-scene"),
+      undefined,
+      false,
+      "baseline",
+      superPerformanceEnabled(),
+    );
     next.renderer.domElement.style.opacity = "0";
     next.setPresentationVisible(false, true);
     await next.load();
@@ -1482,7 +1527,13 @@ async function start() {
       !isWallpaper ||
       wallpaperHost()?.properties.load3donstartup?.value !== false
     ) {
-      scene = new ArchiveScene($("#three-scene"));
+      scene = new ArchiveScene(
+        $("#three-scene"),
+        undefined,
+        false,
+        "baseline",
+        superPerformanceEnabled(),
+      );
       scene.setTheme(prefs.colorTheme === "dark", true);
       scene.setArchiveCoverage(
         wallpaperHost()?.properties.archivecoverage?.value === "extra",
@@ -1491,28 +1542,37 @@ async function start() {
       threeState = "off";
       syncThreeButton();
     }
-    await Promise.all([
-      scene?.load(),
-      loadBootWebfonts(),
-      // With unicode-range faces, preload the opening's actual characters,
-      // not every font shard. Other archive text loads on demand.
-      document.fonts.load(
-        "300 20px MiSans",
-        "ACCESS WELCOME TO DESIGN PORTFOLIO",
-      ),
-      document.fonts.load(
-        "400 20px MiSans",
-        "身份信息确认请求已接收开始处理权限验证通过欢迎访问张恒瑀设计档案内部资料档案编号保密级别商业区选择档案：0123456789 ZHANG HENGYU",
-      ),
-      document.fonts.load(
-        "600 20px MiSans",
-        "VISUAL COMMUNICATION DESIGN OS",
-      ),
-      document.fonts.load(
-        "700 20px MiSans",
-        "ZHY DESIGN WELCOME TO DESIGN PORTFOLIO",
+    const fontWarmup = Promise.race([
+      Promise.allSettled([
+        loadBootWebfonts(),
+        // With unicode-range faces, preload the opening's actual characters,
+        // not every font shard. Other archive text loads on demand.
+        document.fonts.load(
+          "300 20px MiSans",
+          "ACCESS WELCOME TO DESIGN PORTFOLIO",
+        ),
+        document.fonts.load(
+          "400 20px MiSans",
+          "身份信息确认请求已接收开始处理权限验证通过欢迎访问张恒瑀设计档案内部资料档案编号保密级别商业区选择档案：0123456789 ZHANG HENGYU",
+        ),
+        document.fonts.load(
+          "600 20px MiSans",
+          "VISUAL COMMUNICATION DESIGN OS",
+        ),
+        document.fonts.load(
+          "700 20px MiSans",
+          "ZHY DESIGN WELCOME TO DESIGN PORTFOLIO",
+        ),
+      ]),
+      new Promise((resolve) =>
+        setTimeout(resolve, isMobileDevice ? 1200 : 3000),
       ),
     ]);
+    await Promise.all([scene?.load(), fontWarmup]);
+    if (entry && prefs.music && isMobileDevice)
+      void audio.prepareMusic().catch(() => {
+        /* Entry offers retry. */
+      });
     if (scene) bindScene(scene);
     savePrefs();
     ready = true;
@@ -1579,9 +1639,8 @@ function completeStartup(silent: boolean) {
     }
   }, fade);
   requestAnimationFrame(frame);
-  // Do not compete with entry audio/font downloads. Full offline installation
-  // begins after startup is complete and remains atomic.
-  setTimeout(() => void initPwa(notify), 1500);
+  // Do not compete with entry audio/font downloads or mobile initial rendering.
+  setTimeout(() => void initPwa(notify), isMobileDevice ? 4000 : 1500);
 }
 updateSelection();
 const customBackground = isWallpaper
