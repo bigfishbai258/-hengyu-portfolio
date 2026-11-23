@@ -35,6 +35,7 @@ import {
   type ArchiveNavigation,
 } from "./archive-loop";
 import { labelMarkSvg } from "./brand";
+import { ArchiveArtwork } from './archive-artwork';
 import { archiveFraming } from "./viewport-layout";
 import { ArchiveDrag, ArchivePlaneMomentum, type DragAxis, type DragProjection, type DragPosition } from "./archive-drag";
 import { assetUrl as publicAsset } from "./asset-url";
@@ -58,6 +59,8 @@ const ease = (t: number) => {
   return t * t * t * (t * (t * 6 - 15) + 10);
 };
 export class ArchiveScene {
+  private artwork = new ArchiveArtwork();
+  private artworkMesh?: THREE.Mesh;
   private inputEvents = new AbortController();
   private presence = 1;
   private presenceTarget = 1;
@@ -77,6 +80,7 @@ export class ArchiveScene {
     this.cancelPointer();
     disposeThreeTree(this.scene);
     this.appearance.disposeSources();
+    this.artwork.dispose();
     this.model.clear();
     this.outgoing = [];
     this.instances = [];
@@ -479,6 +483,10 @@ export class ArchiveScene {
     }
     this.shadowCoverage = new ArchiveShadowCoverage(this.instances.find(mesh => mesh.castShadow)!);
     this.scene.add(this.shadowCoverage.mesh);
+    await this.artwork.load(this.renderer.capabilities.getMaxAnisotropy());
+    this.artworkMesh = this.artwork.createMesh(0);
+    this.model.add(this.artworkMesh);
+    this.scene.add(this.artwork.createArray(this.instances[0].instanceMatrix));
     this.labelCanvas.width = 1024;
     this.labelCanvas.height = 440;
     this.labelTexture = new THREE.CanvasTexture(this.labelCanvas);
@@ -538,6 +546,9 @@ export class ArchiveScene {
     this.appearance.apply(model, 1);
     this.appearance.setClarity(model, this.modelClarity());
     this.appearance.setTheme(model, this.themeAmount);
+    const artwork = this.artwork.createMesh(fileAtSlot(this.selectedSlot), true);
+    model.add(artwork);
+    meshes.push(artwork);
     const canvas = document.createElement("canvas");
     canvas.width = this.labelCanvas.width;
     canvas.height = this.labelCanvas.height;
@@ -779,6 +790,7 @@ export class ArchiveScene {
     this.pulses = this.pulses.slice(-6);
   }
   private drawLabel(index: number) {
+    if (this.artworkMesh) this.artwork.select(this.artworkMesh, index);
     if (!this.labelTexture) return;
     const c = this.labelCanvas.getContext("2d")!;
     c.fillStyle = "#e6e2d9";
@@ -797,7 +809,7 @@ export class ArchiveScene {
     c.fillRect(782, 32, 221, 39);
     c.fillStyle = "#eee9de";
     c.font = "24px MiSans";
-    c.fillText("R L / I S", 809, 61);
+    c.fillText("Z H Y", 809, 61);
     c.fillStyle = "#171713";
     c.font = "bold 64px MiSans";
     c.fillText("INFO", 830, 143);
@@ -1714,6 +1726,7 @@ export class ArchiveScene {
     for (const inst of this.instances) {
       inst.count = this.drawnCells.length;
     }
+    this.artwork.sync(this.drawnCells, this.instances[0].instanceMatrix);
     // Picking uses only the first instanced surface. The other batches disable
     // renderer culling and do not need an O(n) bound recomputation each frame.
     if (matricesChanged || countChanged || !this.instances[0].boundingSphere) this.instances[0].computeBoundingSphere();

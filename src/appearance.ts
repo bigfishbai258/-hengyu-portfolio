@@ -23,6 +23,10 @@ export class CardAppearance {
     for (const child of group.children) {
       const mesh = child as THREE.Mesh;
       const name = mesh.userData.surface as string;
+      if (name === 'Portfolio_Print') {
+        mesh.material = (mesh.material as THREE.Material).clone();
+        continue;
+      }
       const palette = this.palettes.get(name);
       if (!palette) {
         mesh.userData.themeAmount = themeMaterial(mesh.material as THREE.Material, "Printed_Canvas");
@@ -138,6 +142,7 @@ export class CardAppearance {
     for (const child of group.children) {
       const mesh = child as THREE.Mesh;
       const palette = this.palettes.get(mesh.userData.surface);
+      if (mesh.userData.surface === 'Portfolio_Print') continue;
       if (!palette) {
         // The printed canvas belongs to this file, including returning copies.
         (mesh.material as THREE.MeshBasicMaterial).opacity = value;
