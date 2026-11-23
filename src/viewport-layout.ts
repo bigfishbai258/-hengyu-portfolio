@@ -12,7 +12,7 @@ export function viewportLayout(width: number, height: number, coarse: boolean, c
     kind: "cinematic" as const,
   };
   const portrait = width / height < 1.05;
-  const compact = portrait || width < 1100 || (coarse && height < 600);
+  const compact = portrait || width < 1100 || height < 540 || (coarse && height < 600);
   const scale = compact ? 1 : height / 1080;
   return { width: width / scale, height: height / scale, scale,
     kind: portrait ? "portrait" as const : compact ? "compact" as const : "desktop" as const };

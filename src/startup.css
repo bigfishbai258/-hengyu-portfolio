@@ -10,3 +10,16 @@
   .loading-mark { width: 125px; margin-bottom: 32px; }
   .loading > span { font-size: 9px; letter-spacing: 1.3px; }
 }
+@media (max-height: 500px) and (orientation: landscape) {
+  #viewport > .loading {
+    padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    overflow-y: auto;
+  }
+  .loading-mark { width: 112px; height: 67px; margin-bottom: 14px; }
+  .loading > span { font-size: 9px; letter-spacing: 1.5px; }
+  .loading > i { margin-top: 10px; width: 150px; }
+  .entry-controls { margin-top: 16px; }
+  .entry-start { min-height: 40px; padding: 6px 20px; font-size: 14px; }
+  .entry-silent { min-height: 36px; margin-top: 6px; font-size: 12px; }
+  .entry-status { margin-top: 8px; font-size: 11px; line-height: 1.4; }
+}
