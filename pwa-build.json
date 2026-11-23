@@ -1,10 +1,10 @@
 {
-  "version": "8bd746a587da6e8a",
-  "bytes": 1709393,
-  "totalBytes": 50255241,
+  "version": "0e65f12b7db306ab",
+  "bytes": 1262615,
+  "totalBytes": 50981387,
   "files": [
-    "assets/index-BG_ARuje.css",
-    "assets/index-vOEhphx8.js",
+    "assets/index-BQsNgr0B.js",
+    "assets/index-Cs6eewia.css",
     "favicon.svg",
     "icons/app-icon.svg",
     "icons/apple-touch-icon.png",
@@ -14,5 +14,5 @@
     "index.html",
     "manifest.webmanifest"
   ],
-  "totalFiles": 856
+  "totalFiles": 879
 }

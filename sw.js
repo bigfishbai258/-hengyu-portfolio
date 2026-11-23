@@ -1,6 +1,6 @@
 /* The build replaces both tokens; this file is never registered in development. */
-const VERSION = "8bd746a587da6e8a";
-const FILES = ["assets/index-BG_ARuje.css","assets/index-vOEhphx8.js","favicon.svg","icons/app-icon.svg","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","index.html","manifest.webmanifest"];
+const VERSION = "0e65f12b7db306ab";
+const FILES = ["assets/index-BQsNgr0B.js","assets/index-Cs6eewia.css","favicon.svg","icons/app-icon.svg","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","index.html","manifest.webmanifest"];
 const SCOPE = self.registration.scope;
 const PREFIX = `rhine-lab:${new URL(SCOPE).pathname}:`;
 const CACHE = PREFIX + VERSION;
