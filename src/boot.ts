@@ -1,5 +1,5 @@
 import { bootMotion } from "./boot-motion";
-import { bootMarkContour } from "./brand";
+import { bootMarkSegments } from "./brand";
 import { themeAmount } from "./theme-ui";
 import { BootLettering } from "./boot-lettering";
 
@@ -13,10 +13,10 @@ const arc = (r: number, start: number, sweep: number, x = 960, y = 540) => {
 
 export class BootSequence {
   private nodes: Map<string, HTMLElement> = new Map();
-  private contour: SVGPathElement;
+  private contours: { el: SVGPathElement; a: number; b: number }[];
   private letters: SVGTextElement;
-  private plus: SVGPathElement;
-  private minus: SVGPathElement;
+  private crossbar: SVGPathElement;
+  private stem: SVGPathElement;
   private brandLines: HTMLElement[];
   private scanPaths: SVGPathElement[];
   private orbitDots: SVGCircleElement[];
@@ -49,22 +49,42 @@ export class BootSequence {
       ".boot-white",
     ].forEach((s) => this.nodes.set(s, stage.querySelector<HTMLElement>(s)!));
     const mark = stage.querySelector<SVGSVGElement>(".boot-logo svg")!;
-    const original = mark.querySelector("path")!;
-    this.contour = original;
-    this.contour.setAttribute("d", bootMarkContour);
-    this.contour.setAttribute("pathLength", "1");
-    const symbols = mark.querySelector("path:not([pathLength])")!;
-    this.plus = document.createElementNS(ns, "path");
-    this.plus.setAttribute("d", "M44 70h50M69 45v50");
-    this.minus = document.createElementNS(ns, "path");
-    this.minus.setAttribute("d", "M219 70h44");
-    [this.plus, this.minus].forEach((p) => {
-      p.setAttribute("stroke", "currentColor");
-      p.setAttribute("stroke-width", "15");
-      mark.insertBefore(p, symbols);
-    });
-    symbols.remove();
     this.letters = mark.querySelector("text")!;
+    mark.querySelectorAll("path").forEach((node) => node.remove());
+    const fallbackLengths = [387.071, 112, 170.5];
+    const rawContours = bootMarkSegments.map((d) => {
+      const el = document.createElementNS(ns, "path");
+      el.setAttribute("d", d);
+      el.setAttribute("fill", "none");
+      el.setAttribute("stroke", "currentColor");
+      el.setAttribute("stroke-width", "22");
+      el.setAttribute("stroke-linejoin", "bevel");
+      mark.insertBefore(el, this.letters);
+      return el;
+    });
+    const lengths = rawContours.map(
+      (el, i) => el.getTotalLength() || fallbackLengths[i],
+    );
+    const totalLength = lengths.reduce((sum, len) => sum + len, 0);
+    let cursor = 0;
+    this.contours = rawContours.map((el, i) => {
+      const a = cursor / totalLength;
+      cursor += lengths[i];
+      const b = cursor / totalLength;
+      el.setAttribute("pathLength", "1");
+      return { el, a, b };
+    });
+    this.crossbar = document.createElementNS(ns, "path");
+    this.crossbar.setAttribute("fill", "none");
+    this.crossbar.setAttribute("stroke", "currentColor");
+    this.crossbar.setAttribute("stroke-width", "20");
+    this.stem = document.createElementNS(ns, "path");
+    this.stem.setAttribute("d", "M-23 0H23");
+    this.stem.setAttribute("fill", "none");
+    this.stem.setAttribute("stroke", "currentColor");
+    this.stem.setAttribute("stroke-width", "22");
+    mark.insertBefore(this.crossbar, this.letters);
+    mark.insertBefore(this.stem, this.letters);
     this.letters.setAttribute("text-anchor", "start");
     this.letters.setAttribute("x", "20");
     this.brandLines = Array.from(
@@ -135,26 +155,33 @@ export class BootSequence {
     this.opacity(".boot-logo", s.logoOpacity);
     this.el(".boot-logo").style.transform =
       `translate(${s.logo.offsetX}px, 1px)`;
-    this.contour.style.strokeDasharray = `${s.logo.length} ${1 - s.logo.length}`;
-    this.contour.style.strokeDashoffset = String(-s.logo.start);
-    this.contour.setAttribute("stroke-width", String(s.logo.strokeWidth));
+    this.renderLogoContours(
+      s.logo.start,
+      s.logo.length,
+      s.logo.strokeWidth * (22 / 26),
+    );
     // Preserve the SVG text node once each revealed letter is in place. Replacing
     // it every frame invalidates glyph rasterization under the moving HUD.
     if (this.letters.textContent !== s.logoLetters)
       this.letters.textContent = s.logoLetters;
-    this.plus.style.opacity = this.minus.style.opacity =
+    this.crossbar.style.opacity = this.stem.style.opacity =
       s.logo.symbolScale > 0 ? "1" : "0";
-    this.plus.setAttribute(
-      "transform",
-      `translate(${s.logo.plusX} 70) rotate(${s.logo.plusAngle}) scale(${s.logo.symbolScale}) translate(-69 -70)`,
-    );
-    this.minus.setAttribute(
+    const crossbarWidth =
+      15 + ((s.logo.minusWidth - 15) / (46 - 15)) * (60 - 15);
+    this.crossbar.setAttribute(
       "d",
-      `M${-s.logo.minusWidth / 2} 0h${s.logo.minusWidth}`,
+      `M${-crossbarWidth / 2} 0h${crossbarWidth}`,
     );
-    this.minus.setAttribute(
+    this.crossbar.setAttribute(
       "transform",
-      `translate(${s.logo.minusX} 70) scale(${s.logo.symbolScale})`,
+      `translate(155 72) scale(${s.logo.symbolScale})`,
+    );
+    const travel = (155 - s.logo.plusX) / (155 - 72.6);
+    const stemX = 155 + (249 - 155) * travel;
+    const stemY = 72 + (105 - 72) * travel;
+    this.stem.setAttribute(
+      "transform",
+      `translate(${stemX} ${stemY}) rotate(${s.logo.plusAngle}) scale(${s.logo.symbolScale})`,
     );
     this.opacity(".auth-status", s.authOpacity);
     this.authLettering.setText(s.auth);
@@ -193,6 +220,60 @@ export class BootSequence {
     this.el(".boot-background svg").style.transform =
       `translate(${Math.sin(t * 0.16) * 18}px, ${-(t - 6) * 5}px) scale(1.08)`;
     return s;
+  }
+  private renderLogoContours(
+    start: number,
+    length: number,
+    strokeWidth: number,
+  ) {
+    const sw = String(strokeWidth);
+    if (length <= 0.0001) {
+      for (const seg of this.contours) {
+        seg.el.style.opacity = "0";
+        seg.el.setAttribute("stroke-width", sw);
+      }
+      return;
+    }
+    const u0 = ((start % 1) + 1) % 1;
+    const u1 = u0 + length;
+    const visible: [number, number][] =
+      length >= 0.9999
+        ? [[0, 1]]
+        : u1 <= 1
+          ? [[u0, u1]]
+          : [
+              [0, u1 - 1],
+              [u0, 1],
+            ];
+    for (const seg of this.contours) {
+      seg.el.setAttribute("stroke-width", sw);
+      const span = seg.b - seg.a;
+      const parts: [number, number][] = [];
+      for (const [v0, v1] of visible) {
+        const lo = Math.max(seg.a, v0);
+        const hi = Math.min(seg.b, v1);
+        if (hi > lo + 1e-6)
+          parts.push([(lo - seg.a) / span, (hi - seg.a) / span]);
+      }
+      if (parts.length === 0) {
+        seg.el.style.opacity = "0";
+      } else if (parts.length === 1) {
+        const [p0, p1] = parts[0];
+        seg.el.style.opacity = "1";
+        if (p0 <= 1e-5 && p1 >= 1 - 1e-5) {
+          seg.el.style.strokeDasharray = "none";
+          seg.el.style.strokeDashoffset = "0";
+        } else {
+          seg.el.style.strokeDasharray = `${p1 - p0} 2`;
+          seg.el.style.strokeDashoffset = String(-p0);
+        }
+      } else {
+        const [[, p1], [p2]] = parts;
+        seg.el.style.opacity = "1";
+        seg.el.style.strokeDasharray = `${p1} ${p2 - p1} ${1 - p2} 2`;
+        seg.el.style.strokeDashoffset = "0";
+      }
+    }
   }
   private renderScan(s: ReturnType<typeof bootMotion>) {
     const { scan } = s,

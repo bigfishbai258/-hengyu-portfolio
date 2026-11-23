@@ -1,11 +1,19 @@
-// One shared mark for the interface and the printed archive label.
-const paths = `<path d="M156 75C127 48 103 15 70 15C37 15 15 39 15 70S38 128 70 128C103 128 127 96 176 52M155 75C182 99 208 128 240 128C273 128 295 105 295 73S273 15 240 15C221 15 207 23 192 38" fill="none" stroke="currentColor" stroke-width="26"/><path d="M44 70h50M69 45v50M219 70h44" fill="none" stroke="currentColor" stroke-width="15"/>`;
+// One shared ZHY monogram mark for the interface and the printed archive label.
+// Primary geometric Z->H->Y ribbon (y: 16..128, center x: 155) with signature
+// RhineLab diagonal optical cut (2.75% gap aligned to settled boot frame 264).
+const primaryPaths = `<path d="M18 27H95L66.6 63M55.2 77.4L24 117H108C119 117 125 111 125 100V16M185 16V128M216 16V48C216 68 230.5 82 249 82C267.5 82 282 68 282 48V16" fill="none" stroke="currentColor" stroke-width="22" stroke-linejoin="bevel"/>`;
+const secondaryPaths = `<path d="M125 72H185" fill="none" stroke="currentColor" stroke-width="20"/><path d="M249 82V128" fill="none" stroke="currentColor" stroke-width="22"/>`;
+const paths = `${primaryPaths}${secondaryPaths}`;
 export const labelMarkSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 310 145" color="#171713">${paths}</svg>`;
-export const logo = `<svg viewBox="0 0 310 185" aria-label="Zhang Hengyu" role="img">${paths}<text x="165" y="174" text-anchor="middle" font-family="MiSans,sans-serif" font-size="16" font-weight="700" letter-spacing="22">ZHY·DESIGN</text></svg>`;
-// The same Bezier contour, continuous for the opening's moving draw/erase ends.
-// Its small printed gap is animated with stroke dashes, not baked into the path.
-export const bootMarkContour =
-  "M295 73C295 41 273 15 240 15C221 15 207 23 192 38C186 43 181 47 176 52C127 96 103 128 70 128C38 128 15 101 15 70C15 39 37 15 70 15C103 15 127 48 156 75C182 99 208 128 240 128C273 128 295 105 295 73Z";
+export const logo = `<svg viewBox="0 0 310 185" aria-label="Zhang Hengyu" role="img">${paths}<text x="165" y="174" text-anchor="middle" fill="currentColor" font-family="MiSans,sans-serif" font-size="16" font-weight="700" letter-spacing="22">ZHY·DESIGN</text></svg>`;
+// Uncut primary Z->H->Y ribbon segments for the opening's moving draw/erase ends
+// and traveling 2.75% optical cut (frames 229..486).
+export const bootMarkSegments = [
+  "M18 27H95L24 117H108C119 117 125 111 125 100V16",
+  "M185 16V128",
+  "M216 16V48C216 68 230.5 82 249 82C267.5 82 282 68 282 48V16",
+] as const;
+export const bootMarkContour = bootMarkSegments.join("");
 
 // Personal identity in the original three-line terminal layout.
 const analysisPositions = [2, 34, 65, 99, 131, 157];
