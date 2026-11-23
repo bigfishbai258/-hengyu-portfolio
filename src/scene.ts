@@ -37,6 +37,7 @@ import {
 import { labelMarkSvg } from "./brand";
 import { ArchiveArtwork } from './archive-artwork';
 import { archiveFraming } from "./viewport-layout";
+import { localPointer, logicalPoint, visualRectSize } from "./forced-landscape";
 import { ArchiveDrag, ArchivePlaneMomentum, type DragAxis, type DragProjection, type DragPosition } from "./archive-drag";
 import { assetUrl as publicAsset } from "./asset-url";
 import { fullMotion, reducedMotion, type MotionPreferences } from "./motion-preferences";
@@ -875,7 +876,7 @@ export class ArchiveScene {
     const w = this.container.clientWidth,
       h = this.container.clientHeight;
     const kind = this.container.closest<HTMLElement>("[data-layout]")?.dataset.layout ?? "";
-    const displayHeight = this.container.getBoundingClientRect().height;
+    const displayHeight = visualRectSize(this.container).height;
     if (this.layoutKind === "cinematic" && kind !== "cinematic" && this.displayHeight > 0) {
       // Removing letterboxing starts from the same apparent model size. The
       // existing camera interpolation then carries it to the responsive anchor.
@@ -933,10 +934,10 @@ export class ArchiveScene {
     this.onHover?.(cell ? fileAtCell(cell) : null);
   }
   private pickCell(x: number, y: number) {
-    const r = this.renderer.domElement.getBoundingClientRect();
+    const p = localPointer(this.renderer.domElement, x, y);
     this.cursor.set(
-      ((x - r.left) / r.width) * 2 - 1,
-      (-(y - r.top) / r.height) * 2 + 1,
+      (p.x / p.width) * 2 - 1,
+      -(p.y / p.height) * 2 + 1,
     );
     this.raycaster.setFromCamera(this.cursor, this.camera);
     const hit = this.raycaster.intersectObjects(
@@ -962,7 +963,7 @@ export class ArchiveScene {
     this.model.updateMatrixWorld(true);
     this.camera.updateMatrixWorld(true);
     const center = this.model.localToWorld(new THREE.Vector3(0, 1.85, 0));
-    const rect = this.renderer.domElement.getBoundingClientRect();
+    const rect = visualRectSize(this.renderer.domElement);
     const project = (motion: THREE.Vector3) => {
       const from = center
         .clone()
@@ -1035,10 +1036,10 @@ export class ArchiveScene {
         this.archiveMomentum
       )
         return;
-      const r = canvas.getBoundingClientRect();
+      const p = localPointer(canvas, e.clientX, e.clientY);
       this.pointer.set(
-        (e.clientX - r.left) / r.width - 0.5,
-        (e.clientY - r.top) / r.height - 0.5,
+        p.x / p.width - 0.5,
+        p.y / p.height - 0.5,
       );
       const cell = this.pickCell(e.clientX, e.clientY);
       this.setHover(cell);
@@ -1072,9 +1073,11 @@ export class ArchiveScene {
     const moveArchive = (e: PointerEvent) => {
       const pending = !this.archiveDrag.active;
       for (const sample of e.getCoalescedEvents?.() ?? []) {
-        this.archiveDrag.move(sample.clientX, sample.clientY, sample.timeStamp);
+        const sp = logicalPoint(sample.clientX, sample.clientY);
+        this.archiveDrag.move(sp.x, sp.y, sample.timeStamp);
       }
-      this.archiveDrag.move(e.clientX, e.clientY, e.timeStamp);
+      const ep = logicalPoint(e.clientX, e.clientY);
+      this.archiveDrag.move(ep.x, ep.y, e.timeStamp);
       moved ||= this.archiveDrag.moved;
       if (!this.archiveDrag.active) return;
       if (pending) {
@@ -1108,8 +1111,9 @@ export class ArchiveScene {
       activePointer = e.pointerId;
       cancelled = false;
       moved = this.archiveMomentum !== null;
-      startX = previousX = e.clientX;
-      startY = e.clientY;
+      const pt = logicalPoint(e.clientX, e.clientY);
+      startX = previousX = pt.x;
+      startY = pt.y;
       browse = this.canBrowse();
       this.stopMomentum();
       if (browse) {
@@ -1119,14 +1123,15 @@ export class ArchiveScene {
       this.holdingArchive = browse;
       this.dragging = !browse && this.canInspect;
       startTrack = { lane: this.columnCamera.value, row: this.rail.value };
-      this.archiveDrag.start(e.clientX, e.clientY, this.dragProjection(), e.timeStamp);
+      this.archiveDrag.start(pt.x, pt.y, this.dragProjection(), e.timeStamp);
       this.setHover(null);
       canvas.setPointerCapture(e.pointerId);
       if (this.relayActive) { this.holdingArchive = false; this.dragging = false; }
     }, { signal: this.inputEvents.signal });
     canvas.addEventListener("pointermove", (e) => {
+      const pt = logicalPoint(e.clientX, e.clientY);
       if (this.relayActive) {
-        if (e.pointerId === activePointer) moved ||= Math.hypot(e.clientX - startX, e.clientY - startY) > 7;
+        if (e.pointerId === activePointer) moved ||= Math.hypot(pt.x - startX, pt.y - startY) > 7;
         return;
       }
       if (activePointer !== null && e.pointerId !== activePointer) return;
@@ -1136,7 +1141,7 @@ export class ArchiveScene {
         return;
       }
       if (cancelled) return;
-      moved ||= Math.hypot(e.clientX - startX, e.clientY - startY) > 7;
+      moved ||= Math.hypot(pt.x - startX, pt.y - startY) > 7;
       if (browse) {
         if (!this.canBrowse()) {
           this.cancelPointer();
@@ -1147,11 +1152,11 @@ export class ArchiveScene {
       }
       if (this.dragging && this.canInspect) {
         this.targetRotation = THREE.MathUtils.clamp(
-          this.targetRotation + (e.clientX - previousX) * 0.004,
+          this.targetRotation + (pt.x - previousX) * 0.004,
           -0.8,
           0.8,
         );
-        previousX = e.clientX;
+        previousX = pt.x;
       }
     }, { signal: this.inputEvents.signal });
     canvas.addEventListener("pointerup", (e) => {

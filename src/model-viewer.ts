@@ -13,6 +13,7 @@ import {
 } from "./quality-renderer";
 import { fullMotion, type MotionPreferences } from "./motion-preferences";
 import { inputDevice, onInputDevice } from "./gamepad";
+import { createRotatedControlElement } from "./forced-landscape";
 
 const PARTS = [
   { id: "fasteners", label: "紧固件", en: "FASTENERS", depth: 2.75 },
@@ -146,7 +147,7 @@ export class ModelViewer {
     this.controlCamera.copy(this.camera);
     this.controls = new OrbitControls(
       this.controlCamera,
-      this.renderer.domElement,
+      createRotatedControlElement(this.renderer.domElement),
     );
     this.controls.enableDamping = false;
     this.pipeline = createViewerPipeline(

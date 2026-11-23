@@ -4,6 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { renderDimensions, type RenderQuality } from "./render-quality";
+import { visualRectSize } from "./forced-landscape";
 
 export function applyTextureQuality(
   root: THREE.Object3D,
@@ -46,7 +47,7 @@ export function resizeQuality(
     quality,
     width,
     height,
-    host.getBoundingClientRect().width / width,
+    visualRectSize(host).width / width,
     devicePixelRatio,
     renderer.capabilities.maxTextureSize,
     superPerformance ? 921_600 : 8_294_400,

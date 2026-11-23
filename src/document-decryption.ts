@@ -1,4 +1,5 @@
 import type { DecryptionFrame } from "./decryption";
+import { isForcedLandscape } from "./forced-landscape";
 
 type Cover = { window: HTMLElement; ink: HTMLElement; order: number };
 
@@ -25,10 +26,11 @@ export class DocumentDecryption {
     const targets = this.root.querySelectorAll<HTMLElement>(
       "h2, .detail-title-cn, .metadata dd, .tab-panel p, .research-notes li, .log-row",
     );
+    const rotated = isForcedLandscape();
     targets.forEach((target) => {
       target.classList.add("document-redacted");
       const bounds = target.getBoundingClientRect();
-      const scale = bounds.width / target.offsetWidth;
+      const scale = (rotated ? bounds.height : bounds.width) / target.offsetWidth;
       if (!scale || !Number.isFinite(scale)) return;
       const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
       const lines: { x: number; y: number; right: number; bottom: number }[] = [];
@@ -39,10 +41,10 @@ export class DocumentDecryption {
         range.selectNodeContents(node);
         for (const rect of range.getClientRects()) {
           if (!rect.width || !rect.height) continue;
-          const x = (rect.left - bounds.left) / scale;
-          const y = (rect.top - bounds.top) / scale;
-          const right = (rect.right - bounds.left) / scale;
-          const bottom = (rect.bottom - bounds.top) / scale;
+          const x = (rotated ? rect.top - bounds.top : rect.left - bounds.left) / scale;
+          const y = (rotated ? bounds.right - rect.right : rect.top - bounds.top) / scale;
+          const right = (rotated ? rect.bottom - bounds.top : rect.right - bounds.left) / scale;
+          const bottom = (rotated ? bounds.right - rect.left : rect.bottom - bounds.top) / scale;
           const line = lines.find((entry) => Math.abs(entry.y - y) < 6);
           if (line) {
             line.x = Math.min(line.x, x);

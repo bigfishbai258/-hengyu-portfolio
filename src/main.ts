@@ -90,6 +90,7 @@ $("#stage").innerHTML = `
     <button data-action="profile">关于我</button>
     <button data-action="search"><span class="nav-glyph">⌕</span> ARCHIVE INDEX <span class="key">/</span></button>
     <button data-action="saved" aria-label="查看收藏档案" title="收藏档案">＋ SAVED <span id="saved-count">00</span></button>
+    <button class="orientation-button" data-action="toggle-orientation" aria-label="切换为竖屏模式" title="切换横竖屏" hidden>竖屏</button>
     <button class="settings-button" data-action="settings" aria-label="系统设置" title="系统设置"><span class="settings-glyph" aria-hidden="true">◷</span><span class="settings-label">设置</span></button>
   </nav>
   <button id="skip" class="skip" data-action="skip">ENTER SYSTEM <span>↗</span></button>
@@ -195,6 +196,7 @@ const storedPrefs = readLocal<
     rendering: RenderQuality;
     superPerformance: boolean;
     qualityCustomized: boolean;
+    forceLandscape: boolean;
     colorTheme: "light" | "dark";
     motion: StoredMotion;
     motionPreset: MotionPreset;
@@ -231,6 +233,7 @@ const prefs = {
     ? true
     : (storedPrefs.superPerformance ?? false),
   qualityCustomized: hasCustomQuality,
+  forceLandscape: storedPrefs.forceLandscape ?? isMobileDevice,
   rendering: defaultMobilePerformance
     ? { ...qualityPresets.performance }
     : normalizeQuality(storedPrefs.rendering, storedPrefs.quality !== false),
@@ -323,6 +326,7 @@ const entry =
         unlock: () => audio.unlock(),
         cancel: () => audio.cancelEntry(),
         start: (silent) => completeStartup(silent),
+        toggleOrientation: () => toggleOrientation(),
       })
     : undefined;
 if (entry) {
@@ -427,29 +431,70 @@ function savePrefs() {
   syncWallpaperBackground();
 }
 let previousLayout = "";
+function toggleOrientation() {
+  prefs.forceLandscape = !prefs.forceLandscape;
+  const checkbox = document.querySelector<HTMLInputElement>(
+    '[data-pref="forceLandscape"]',
+  );
+  if (checkbox) checkbox.checked = prefs.forceLandscape;
+  savePrefs();
+  fit();
+  if (started) {
+    notify(prefs.forceLandscape ? "已切换至横屏模式" : "已切换至竖屏模式");
+  }
+}
 function fit() {
   const stage = $("#stage");
   const viewport = $("#viewport");
   const coarse = matchMedia("(pointer: coarse)").matches;
+  const forcedLandscape =
+    !isWallpaper &&
+    prefs.forceLandscape &&
+    window.innerHeight > window.innerWidth;
+  document.documentElement.dataset.forcedLandscape = String(forcedLandscape);
+  viewport.dataset.forcedLandscape = String(forcedLandscape);
+  const vpWidth = Math.max(
+    1,
+    forcedLandscape ? viewport.clientWidth || window.innerHeight : viewport.clientWidth,
+  );
+  const vpHeight = Math.max(
+    1,
+    forcedLandscape ? viewport.clientHeight || window.innerWidth : viewport.clientHeight,
+  );
   const reference =
     reviewParams.has("time") || reviewParams.get("review") === "1";
   const { width, height, scale, kind } =
     mode === "boot" && !reference
-      ? openingLayout(viewport.clientWidth, viewport.clientHeight)
-      : viewportLayout(
-          viewport.clientWidth,
-          viewport.clientHeight,
-          coarse,
-          mode === "boot",
-        );
+      ? openingLayout(vpWidth, vpHeight)
+      : viewportLayout(vpWidth, vpHeight, coarse, mode === "boot");
   stage.style.width = `${width}px`;
   stage.style.height = `${height}px`;
   stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   stage.dataset.layout = kind;
   stage.dataset.touch = String(coarse);
+  stage.dataset.mobileDevice = String(isMobileDevice);
+  const landscapePhone =
+    kind === "compact" &&
+    width > height &&
+    (height <= 540 || (coarse && height <= 620) || forcedLandscape);
+  stage.dataset.landscapePhone = String(landscapePhone);
+  stage.dataset.landscapeCompact = String(landscapePhone && width <= 740);
   viewport.dataset.mobileBoot = String(
-    mode === "boot" && (coarse || viewport.clientWidth < 1100),
+    mode === "boot" && (coarse || vpWidth < 1100 || forcedLandscape),
   );
+  const canToggleOrientation =
+    isMobileDevice && window.innerHeight > window.innerWidth;
+  const orientBtn =
+    document.querySelector<HTMLButtonElement>(".orientation-button");
+  if (orientBtn) {
+    orientBtn.hidden = !canToggleOrientation;
+    orientBtn.textContent = forcedLandscape ? "竖屏" : "横屏";
+    orientBtn.setAttribute(
+      "aria-label",
+      forcedLandscape ? "切换为竖屏模式" : "切换为横屏模式",
+    );
+  }
+  entry?.setOrientationButton(canToggleOrientation, forcedLandscape);
   stage.style.setProperty("--stage-scale", String(scale));
   stage.style.setProperty("--opening-width", `${width}px`);
   stage.style.setProperty("--opening-height", `${height}px`);
@@ -460,14 +505,18 @@ function fit() {
   stage.dataset.openingPortrait = String(width < height);
   // The software keyboard resizes dialogs without recomposing the 3D scene.
   const visible = window.visualViewport;
-  const stageTop = (viewport.clientHeight - height * scale) / 2;
+  const stageTop = (vpHeight - height * scale) / 2;
   stage.style.setProperty(
     "--modal-top",
-    `${Math.max(0, (visible?.offsetTop ?? 0) - stageTop) / scale}px`,
+    forcedLandscape
+      ? "0px"
+      : `${Math.max(0, (visible?.offsetTop ?? 0) - stageTop) / scale}px`,
   );
   stage.style.setProperty(
     "--modal-height",
-    `${Math.min(height, (visible?.height ?? viewport.clientHeight) / scale)}px`,
+    forcedLandscape
+      ? `${height}px`
+      : `${Math.min(height, (visible?.height ?? vpHeight) / scale)}px`,
   );
   $("#viewport").style.setProperty("--scale", String(scale));
   const marks = document.querySelector("#inspection-marks");
@@ -478,6 +527,7 @@ function fit() {
     scale,
     kind,
     devicePixelRatio,
+    forcedLandscape,
   ]);
   if (layoutKey !== previousLayout) {
     previousLayout = layoutKey;
@@ -496,7 +546,14 @@ function fit() {
       indicator.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`;
   });
 }
+function handleOrientationChange() {
+  fit();
+  setTimeout(fit, 120);
+  setTimeout(fit, 350);
+}
 window.addEventListener("resize", fit);
+window.addEventListener("orientationchange", handleOrientationChange);
+screen.orientation?.addEventListener?.("change", handleOrientationChange);
 window.visualViewport?.addEventListener("resize", fit);
 window.visualViewport?.addEventListener("scroll", fit);
 matchMedia("(pointer: coarse)").addEventListener("change", fit);
@@ -885,7 +942,7 @@ function motionPreferenceNoteMarkup() {
   return `<div id="motion-preference-note" class="motion-preference-note"><p>${motionSummary(prefs.motion)}</p><span>预设：${preset === "full" ? "完整动画" : preset === "reduced" ? "减少动画" : "自定义"} · 选择会保存在本站</span>${allEnabled ? "" : '<button data-action="enable-motion">启用完整动画并重播 ↻</button>'}</div>`;
 }
 function settingsMarkup() {
-  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">ZHANG HENGYU <span>·</span> PORTFOLIO ONLINE</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark")}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；手机端默认开启以加速加载，关闭后恢复自定义画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}</div>${motionPreferenceNoteMarkup()}${motionSettingsMarkup(prefs.motion, prefs.motionPreset)}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? "<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>" : "<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取 <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回</p>"}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ""}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>DESIGN OS / 1.0 · 基于 <a href="https://github.com/LBEILC/RhineLabUI" target="_blank" rel="noopener">RhineLabUI</a> · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>DESIGNED BY ZHY DESIGN</span></div>`;
+  return `<h2>SYSTEM SETTINGS<small>终端偏好设置</small></h2><p class="settings-intro">ZHANG HENGYU <span>·</span> PORTFOLIO ONLINE</p>${isWallpaper ? '<p class="wallpaper-settings-note">每次启动都会读取 Wallpaper Engine 中的设置。在此修改仅对当前运行生效，无法持久保存；如需保留，请在 Wallpaper Engine 的壁纸属性中调整。</p>' : ""}<div class="settings-list">${themeSettingsMarkup(prefs.colorTheme === "dark")}${!isWallpaper && isMobileDevice ? `<label><div><strong>MOBILE LANDSCAPE</strong><span>手机端默认横屏展示（竖屏握持与微信内自动旋转）；关闭后恢复竖屏排版</span></div><input type="checkbox" data-pref="forceLandscape" ${prefs.forceLandscape ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${!isWallpaper ? `<label><div><strong>SUPER PERFORMANCE</strong><span>降低三维画质和渲染分辨率，保留完整动效；手机端默认开启以加速加载，关闭后恢复自定义画质</span></div><input type="checkbox" data-pref="superPerformance" ${prefs.superPerformance ? "checked" : ""}/><i class="toggle"></i></label>` : ""}${workbench?.settingsMarkup() ?? ""}${audioSettingsMarkup(prefs)}</div>${motionPreferenceNoteMarkup()}${motionSettingsMarkup(prefs.motion, prefs.motionPreset)}${qualityMarkup(prefs.rendering)}${pwaSettingsMarkup()}<div class="settings-shortcuts">${isWallpaper ? "<span>DESKTOP CONTROLS</span><p>拖动阵列或点击界面按钮浏览档案。桌面模式下，方向键与滚轮可能无法传入壁纸。</p>" : "<span>KEYBOARD CONTROLS</span><p><kbd>←</kbd><kbd>→</kbd> 切列 <kbd>↑</kbd><kbd>↓</kbd> 选档 <kbd>ENTER</kbd> 读取 <kbd>/</kbd> 检索 <kbd>ESC</kbd> 返回</p>"}</div><div class="settings-bottom">${!isWallpaper && document.fullscreenEnabled ? '<button data-action="fullscreen">FULLSCREEN <span>↗</span></button>' : ""}<button data-action="restart">REINITIALIZE SYSTEM <span>↻</span></button></div><div class="modal-bottom"><span>DESIGN OS / 1.0 · 基于 <a href="https://github.com/LBEILC/RhineLabUI" target="_blank" rel="noopener">RhineLabUI</a> · 使用 MiSans 字体（小米） <a href="${assetUrl("fonts/MiSans-license.pdf")}" target="_blank" rel="noopener">字体许可</a></span><span>DESIGNED BY ZHY DESIGN</span></div>`;
 }
 
 document.addEventListener("input", (e) => {
@@ -944,14 +1001,18 @@ document.addEventListener("change", (e) => {
       key === "sound" ||
       key === "music" ||
       key === "quality" ||
-      key === "superPerformance"
+      key === "superPerformance" ||
+      key === "forceLandscape"
     ) {
       prefs[key] = el.checked;
       if (key === "quality" || key === "superPerformance")
         prefs.qualityCustomized = true;
     }
     if (key === "sound" || key === "music") saveAudioPrefs();
-    else savePrefs();
+    else {
+      savePrefs();
+      if (key === "forceLandscape") fit();
+    }
     audio.play("confirm");
   }
   if (el.dataset.motion) {
@@ -1098,6 +1159,10 @@ document.addEventListener("click", (e) => {
   if (action === "search" || action === "saved" || action === "settings") {
     el.focus({ preventScroll: true });
     openModal(action);
+  }
+  if (action === "toggle-orientation") {
+    toggleOrientation();
+    audio.play("confirm");
   }
   if (action === "close-modal") closeModal();
   if (action === "bookmark") toggleSaved();

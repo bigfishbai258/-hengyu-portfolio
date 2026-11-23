@@ -3,6 +3,7 @@ type EntryOptions = {
   unlock: () => Promise<boolean>;
   cancel: () => void;
   start: (silent: boolean) => void;
+  toggleOrientation?: () => void;
 };
 
 /** Owns the entry gesture, including keyboard focus and failed audio startup. */
@@ -11,18 +12,24 @@ export class StartupGate {
   private request = 0;
   private button: HTMLButtonElement;
   private silent: HTMLButtonElement;
+  private orientation: HTMLButtonElement;
   private status: HTMLElement;
   constructor(private options: EntryOptions) {
     const { root } = options;
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-modal", "true");
     root.setAttribute("aria-label", "进入张恒瑀设计档案终端");
-    root.insertAdjacentHTML("beforeend", '<div class="entry-controls"><button class="entry-start" disabled>正在准备终端…</button><button class="entry-silent" hidden>关闭声音并进入</button><p class="entry-status" role="status">资源就绪后即可进入</p></div>');
+    root.insertAdjacentHTML("beforeend", '<div class="entry-controls"><button class="entry-start" disabled>正在准备终端…</button><button class="entry-silent" hidden>关闭声音并进入</button><button class="entry-orientation" type="button" hidden>切换竖屏 ↻</button><p class="entry-status" role="status">资源就绪后即可进入</p></div>');
     this.button = root.querySelector<HTMLButtonElement>(".entry-start")!;
     this.silent = root.querySelector<HTMLButtonElement>(".entry-silent")!;
+    this.orientation = root.querySelector<HTMLButtonElement>(".entry-orientation")!;
     this.status = root.querySelector<HTMLElement>(".entry-status")!;
     root.addEventListener("click", event => {
       event.stopPropagation();
+      if ((event.target as Element).closest(".entry-orientation")) {
+        options.toggleOrientation?.();
+        return;
+      }
       if ((event.target as Element).closest(".entry-silent")) {
         this.request++;
         options.cancel();
@@ -32,7 +39,7 @@ export class StartupGate {
     root.addEventListener("keydown", event => {
       event.stopPropagation();
       if (event.key === "Tab") {
-        const buttons = [this.button, this.silent].filter(button => !button.disabled && !button.hidden);
+        const buttons = [this.button, this.silent, this.orientation].filter(button => !button.disabled && !button.hidden);
         if (!buttons.length) { event.preventDefault(); return; }
         const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
         event.preventDefault();
@@ -41,6 +48,10 @@ export class StartupGate {
       // Let native buttons activate on Enter/Space, and never leak this event
       // to the terminal's Enter-to-skip handler.
     });
+  }
+  setOrientationButton(visible: boolean, forcedLandscape: boolean) {
+    this.orientation.hidden = !visible;
+    this.orientation.textContent = forcedLandscape ? "切换竖屏浏览 ↻" : "切换横屏浏览 ↻";
   }
   get phase() { return this.state; }
   ready() {

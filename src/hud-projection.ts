@@ -1,3 +1,5 @@
+import { isForcedLandscape } from "./forced-landscape";
+
 export type HudPoint = { x: number; y: number };
 
 /** Radial HUD surface with a bounded frame; tracking varies tangential terms. */
@@ -54,9 +56,10 @@ export class HudProjection {
     // Read rest poses without the HUD transform, retaining native responsive transforms.
     const enabled = this.stage.dataset.hudDepth;
     this.stage.dataset.hudDepth = "false";
+    const rotated = isForcedLandscape();
     const stageRect = this.stage.getBoundingClientRect();
     this.width = this.stage.offsetWidth; this.height = this.stage.offsetHeight;
-    const scale = stageRect.width / this.width;
+    const scale = (rotated ? stageRect.height : stageRect.width) / this.width;
     this.measured = [];
     const styles = new Map<HTMLElement, CSSStyleDeclaration>();
     const readStyle = (node: HTMLElement) => {
@@ -84,7 +87,9 @@ export class HudProjection {
         entrance.x += parseFloat(translate[0]) || 0;
         entrance.y += parseFloat(translate[1]) || 0;
       }
-      const origin = { x: (rect.left - stageRect.left) / scale - entrance.x - Math.min(...corners.map(p => p.x)), y: (rect.top - stageRect.top) / scale - entrance.y - Math.min(...corners.map(p => p.y)) };
+      const localLeft = rotated ? (rect.top - stageRect.top) / scale : (rect.left - stageRect.left) / scale;
+      const localTop = rotated ? (stageRect.right - rect.right) / scale : (rect.top - stageRect.top) / scale;
+      const origin = { x: localLeft - entrance.x - Math.min(...corners.map(p => p.x)), y: localTop - entrance.y - Math.min(...corners.map(p => p.y)) };
       this.measured.push({ node, width, height, origin, corners: corners.map(p => ({ x: p.x + origin.x, y: p.y + origin.y })),
         transformOrigin: { x: ox, y: oy }, inlineTransform: node.style.transform,
         animated: boot && node.matches('.boot-logo, .welcome') });
@@ -93,7 +98,7 @@ export class HudProjection {
     this.dirty = false;
   }
   update(depth: number, pointer: HudPoint) {
-    const layout = `${this.stage.dataset.layout}/${this.stage.dataset.mode}/${this.stage.dataset.workbench}`;
+    const layout = `${this.stage.dataset.layout}/${this.stage.dataset.mode}/${this.stage.dataset.workbench}/${isForcedLandscape()}`;
     if (layout !== this.layout) { this.layout = layout; this.invalidate(); }
     if (depth < .00001) { this.stage.dataset.hudDepth = "false"; return; }
     // Text/font/layout changes need a rest-pose measurement. The two authored

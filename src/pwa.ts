@@ -69,6 +69,9 @@ export async function initPwa(notify: (message: string) => void) {
     };
     registration.addEventListener("updatefound", watch);
     watch();
+    if (registration.waiting) {
+      registration.waiting.postMessage({ type: "RHINE_APPLY_UPDATE" });
+    }
     refresh();
     void navigator.serviceWorker.ready.then(() => { ready = true; failed = false; refresh(); });
     let lastCheck = Date.now();
