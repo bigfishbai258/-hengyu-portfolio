@@ -15,9 +15,9 @@ const allAssetFiles = all
       path === "favicon.svg" ||
       /^(assets|icons|archives|licenses)\/[^/]+\.[^/]+$/.test(path) ||
       /^fonts\/.*\.(woff2|pdf|txt|json|md)$/.test(path) ||
-      /^audio\/(atmosphere|motif|pulse)\.ogg$/.test(path),
+      /^audio\/(atmosphere|motif|pulse)\.(ogg|m4a)$/.test(path),
   )
-  .filter((path) => !/^assets\/archive-(cassette|assembly)\.glb$/.test(path))
+  .filter((path) => !/^assets\/archive-(cassette|cassette-mobile|assembly)\.glb$/.test(path))
   .sort();
 
 if (!allAssetFiles.some((path) => /^assets\/index-.*\.js$/.test(path))) {

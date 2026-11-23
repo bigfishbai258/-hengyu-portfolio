@@ -5,11 +5,13 @@ export const superPerformanceQuality: RenderQuality = {
   scale: 60, pixelRatio: 1, antialias: "off", shadows: 0, aoSamples: 0,
   aoResolution: .5, depthOfField: 0, transmission: .25, anisotropy: 2,
 };
-// Phones already have small CSS viewports (~390x844); keeping 1x CSS scale stays
-// ~9x lighter than native 3x Retina while avoiding blocky 234px sub-sampling.
+// Phones default to an ultra-lightweight 70% 1x render buffer (~0.16 MP, 18x fewer
+// pixels than 3x Retina) paired with a 24 FPS cap and single-pass opaque/translucent
+// materials to keep thermal, battery, and load times minimal.
 export const mobileSuperPerformanceQuality: RenderQuality = {
   ...superPerformanceQuality,
-  scale: 100,
+  scale: 70,
+  anisotropy: 1,
 };
 
 export function wallpaperQuality(props: WallpaperProperties, fallback: RenderQuality): RenderQuality {

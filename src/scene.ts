@@ -120,6 +120,7 @@ export class ArchiveScene {
   setSuperPerformance(enabled: boolean) {
     if (this.superPerformance === enabled) return;
     this.superPerformance = enabled;
+    this.appearance.setFastMode(enabled);
     this.applySuperPerformanceMaterials();
     if (enabled) {
       this.composer.setSize(1, 1);
@@ -271,10 +272,11 @@ export class ArchiveScene {
     initialSuperPerformance = false,
   ) {
     this.superPerformance = initialSuperPerformance;
+    this.appearance.setFastMode(initialSuperPerformance);
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !initialSuperPerformance,
       alpha: false,
-      powerPreference: "high-performance",
+      powerPreference: initialSuperPerformance ? "low-power" : "high-performance",
     });
     this.renderer.setPixelRatio(
       initialSuperPerformance
@@ -364,7 +366,13 @@ export class ArchiveScene {
     }
     this.bindPointer();
   }
-  async load(assetUrl = publicAsset("assets/archive-cassette.glb")) {
+  async load(
+    assetUrl = publicAsset(
+      this.superPerformance
+        ? "assets/archive-cassette-mobile.glb"
+        : "assets/archive-cassette.glb",
+    ),
+  ) {
     this.labelMark.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(labelMarkSvg)}`;
     await this.labelMark.decode();
     const gltf = await new GLTFLoader().loadAsync(
@@ -1722,7 +1730,9 @@ export class ArchiveScene {
     const renderedDistance = this.camera.position.distanceTo(this.cameraAim);
     const fogTheme = this.themeAmount;
     fog.near = renderedDistance + THREE.MathUtils.lerp(5 - 4 * fogTheme, -1, detail);
-    fog.far = renderedDistance + THREE.MathUtils.lerp(25 - 9 * fogTheme, 12, detail);
+    fog.far = renderedDistance + (this.superPerformance
+      ? THREE.MathUtils.lerp(18 - 6 * fogTheme, 10, detail)
+      : THREE.MathUtils.lerp(25 - 9 * fogTheme, 12, detail));
 
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();

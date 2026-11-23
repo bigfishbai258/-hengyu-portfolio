@@ -196,6 +196,7 @@ const storedPrefs = readLocal<
     rendering: RenderQuality;
     superPerformance: boolean;
     qualityCustomized: boolean;
+    audioCustomized: boolean;
     forceLandscape: boolean;
     colorTheme: "light" | "dark";
     motion: StoredMotion;
@@ -213,6 +214,7 @@ const hasCustomQuality =
   (storedPrefs.rendering !== undefined &&
     matchingPreset(normalizeQuality(storedPrefs.rendering)) !== "original");
 const defaultMobilePerformance = isMobileDevice && !hasCustomQuality;
+const hasCustomAudio = storedPrefs.audioCustomized === true;
 const initialMotion = createMotionPreferences(
   storedPrefs.motion,
   storedPrefs.reduced ??
@@ -222,8 +224,9 @@ const initialMotion = createMotionPreferences(
 );
 const initialMotionPreset = motionPresetFor(initialMotion);
 const prefs = {
-  sound: storedPrefs.sound ?? true,
-  music: storedPrefs.music ?? storedPrefs.sound ?? true,
+  sound: hasCustomAudio ? (storedPrefs.sound ?? true) : true,
+  music: hasCustomAudio ? (storedPrefs.music ?? storedPrefs.sound ?? true) : true,
+  audioCustomized: hasCustomAudio,
   soundVolume: storedPrefs.soundVolume ?? 0.55,
   musicVolume: storedPrefs.musicVolume ?? 0.5,
   motion: initialMotion,
@@ -934,7 +937,7 @@ function updateQualitySummary() {
   const metrics = JSON.parse(
     canvas.parentElement?.dataset.renderQuality ?? "{}",
   );
-  summary.textContent = `${superPerformanceEnabled() ? "超级性能模式已启用 · 画质设置暂被覆盖，关闭后恢复 · " : ""}实际渲染 ${canvas.width} × ${canvas.height} · ${effectiveRenderQuality().antialias === "smaa" ? "SMAA" : "原始抗锯齿"} · 纹理 ${metrics.anisotropy ?? 1}×${metrics.limited ? " · 已达到缓冲上限" : ""}`;
+  summary.textContent = `${superPerformanceEnabled() ? `超级性能模式已启用${isMobileDevice ? " · 24 FPS 省电锁帧" : ""} · 画质设置暂被覆盖，关闭后恢复 · ` : ""}实际渲染 ${canvas.width} × ${canvas.height} · ${effectiveRenderQuality().antialias === "smaa" ? "SMAA" : "原始抗锯齿"} · 纹理 ${metrics.anisotropy ?? 1}×${metrics.limited ? " · 已达到缓冲上限" : ""}`;
 }
 function motionPreferenceNoteMarkup() {
   const preset = prefs.motionPreset;
@@ -1005,6 +1008,7 @@ document.addEventListener("change", (e) => {
       key === "forceLandscape"
     ) {
       prefs[key] = el.checked;
+      if (key === "sound" || key === "music") prefs.audioCustomized = true;
       if (key === "quality" || key === "superPerformance")
         prefs.qualityCustomized = true;
     }
@@ -1372,6 +1376,7 @@ document.fonts.addEventListener("loadingdone", () =>
 );
 
 let lastTime = 0,
+  lastMobileFrame = 0,
   frameCount = 0,
   frameStart = performance.now(),
   fps = 0;
@@ -1383,6 +1388,14 @@ function frame(ms: number) {
   if (document.hidden) {
     requestAnimationFrame(frame);
     return;
+  }
+  if (isMobileDevice && superPerformanceEnabled()) {
+    // Cap mobile super-performance rendering to 24 FPS (~41.7ms/frame).
+    if (ms - lastMobileFrame < 1000 / 24 - 1) {
+      requestAnimationFrame(frame);
+      return;
+    }
+    lastMobileFrame = ms;
   }
   workbench?.tick();
   const time = ms / 1000;
@@ -1665,6 +1678,7 @@ function completeStartup(silent: boolean) {
   if (silent) {
     prefs.sound = false;
     prefs.music = false;
+    prefs.audioCustomized = true;
     saveAudioPrefs();
   }
   audio.releaseEntry();

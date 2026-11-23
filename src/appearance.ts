@@ -10,6 +10,10 @@ type Palette = { high: Surface; low?: Surface };
 // on one mesh so transparent shells never overlap during a quality change.
 export class CardAppearance {
   private palettes = new Map<string, Palette>();
+  private fastMode = false;
+  setFastMode(enabled: boolean) {
+    this.fastMode = enabled;
+  }
   disposeSources() {
     for (const palette of this.palettes.values()) { palette.high.dispose(); palette.low?.dispose(); }
     this.palettes.clear();
@@ -113,6 +117,18 @@ export class CardAppearance {
           palette.high[key],
           quality,
         );
+      if (this.fastMode) {
+        // Single-pass translucent frosted cover avoids Three.js's full-scene
+        // screen-space transmission render pass on mobile GPUs.
+        mat.transmission = 0;
+        mat.transparent = true;
+        mat.depthWrite = false;
+        mat.opacity = THREE.MathUtils.lerp(0.62, 0.22, clarity);
+        return;
+      }
+      mat.transparent = false;
+      mat.depthWrite = true;
+      mat.opacity = 1;
       mat.thickness = THREE.MathUtils.lerp(
         baseline("thickness"),
         0.018,
@@ -181,9 +197,26 @@ export class CardAppearance {
       ] as const) {
         mat[key] = THREE.MathUtils.lerp(low[key] ?? 0, high[key] ?? 0, value);
       }
-      // Keep the same transmission shader/pass throughout the transition.
-      if (high.transmission > 0)
-        mat.transmission = Math.max(0.000001, mat.transmission);
+      if (this.fastMode) {
+        mat.transmission = 0;
+        mat.clearcoat = 0;
+        if (mesh.userData.surface === "Frosted_Polymer") {
+          mat.transparent = true;
+          mat.depthWrite = false;
+          mat.opacity = THREE.MathUtils.lerp(0.75, 0.36, value);
+        } else {
+          mat.transparent = false;
+          mat.depthWrite = true;
+          mat.opacity = 1;
+        }
+      } else {
+        mat.transparent = false;
+        mat.depthWrite = true;
+        mat.opacity = 1;
+        // Keep the same transmission shader/pass throughout the transition.
+        if (high.transmission > 0)
+          mat.transmission = Math.max(0.000001, mat.transmission);
+      }
     }
   }
 

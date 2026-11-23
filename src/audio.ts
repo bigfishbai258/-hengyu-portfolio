@@ -367,22 +367,48 @@ export class TerminalAudio {
   }
   async unlock() {
     this.unlocked = true;
-    await this.activate();
-    return this.context?.state === "running" && (!this.prefs.music || Boolean(this.buffers));
+    const c = this.context ?? this.createContext();
+    if (c.state !== "running") {
+      try {
+        await Promise.race([
+          Promise.all([this.suspension, c.resume()]),
+          new Promise((resolve) => setTimeout(resolve, 1200)),
+        ]);
+      } catch {}
+    }
+    // Synthesized UI sound effects are ready immediately; stream and decode
+    // background music asynchronously so slow cellular networks never block entry.
+    if (c.state === "running" && this.prefs.music) {
+      void this.activate();
+    }
+    return c.state === "running";
   }
-  // Fetch compressed tracks while the entry screen is visible; create/resume
-  // the audio device only from a real click or keyboard activation.
+  // Fetch universal compact AAC (.m4a) tracks with .ogg fallback so iOS Safari,
+  // WeChat, Android, and desktop all decode background music reliably.
   prepareMusic() {
     if (this.musicData) return Promise.resolve(this.musicData);
-    this.fetching ??= Promise.all(STEMS.map(async name => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      try {
-        const response = await fetch(assetUrl(`audio/${name}.ogg`), { signal: controller.signal });
-        if (!response.ok) throw new Error(`Music ${name}: ${response.status}`);
-        return await response.arrayBuffer();
-      } finally { clearTimeout(timeout); }
-    })).then(data => this.musicData = data).finally(() => { this.fetching = undefined; });
+    const fetchStem = async (name: string) => {
+      for (const ext of ["m4a", "ogg"] as const) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch(assetUrl(`audio/${name}.${ext}`), {
+            signal: controller.signal,
+          });
+          if (response.ok) return await response.arrayBuffer();
+        } catch {
+          // Fall through to next format.
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      throw new Error(`Music ${name}: unavailable`);
+    };
+    this.fetching ??= Promise.all(STEMS.map(fetchStem))
+      .then((data) => (this.musicData = data))
+      .finally(() => {
+        this.fetching = undefined;
+      });
     return this.fetching;
   }
   restartBoot() {

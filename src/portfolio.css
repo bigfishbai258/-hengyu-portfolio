@@ -27,3 +27,4 @@ html[data-forced-landscape="true"] #artwork-viewer footer{height:40px;padding:4p
 html[data-forced-landscape="true"] #artwork-viewer .art-stage{height:calc(100vw - 84px);padding:10px}
 
 .detail-actions .bookmark-small{font-size:11px;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #9d9d902f}.detail-actions .solid-button{text-decoration:none;flex:1}.brand h1 .boot-phrase{font-weight:700}
+.portfolio-preview img,.portfolio-gallery img{background:#dfdad1;min-height:80px}.work-img-failed{opacity:.45}
